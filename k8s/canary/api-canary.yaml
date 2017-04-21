@@ -12,33 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-kind: Deployment
 apiVersion: extensions/v1beta1
+kind: Deployment
 metadata:
-  name: scores-api-frontend-canary
+  name: scores-api-canary
 spec:
-  replicas:
+  replicas: 1
   template:
     metadata:
-      name: frontend
       labels:
         app: scores-api
-        role: frontend
         env: canary
     spec:
       containers:
-      - name: frontend
-        image: gcr.io/cloud-solutions-images/gceme:1.0.0
-        resources:
-          limits:
-            memory: "500Mi"
-            cpu: "100m"
-        imagePullPolicy: Always
-        readinessProbe:
-          httpGet:
-            path: /healthz
-            port: 80
-        command: ["sh", "-c", "app -test=false -port=80"]
+      # [START esp]
+      - name: esp
+        image: gcr.io/endpoints-release/endpoints-runtime:1
+        args: [
+          "-p", "8081",
+          "-a", "127.0.0.1:8080",
+          "-s", "scores-api.endpoints.rugby-scores-7.cloud.goog",
+          "-v", "2017-04-20r0",
+        ]
+      # [END esp]
         ports:
-        - name: frontend
-          containerPort: 80
+          - containerPort: 8081
+      - name: scores-api
+        # image: gcr.io/google-samples/echo-go:1.0
+        image: gcr.io/rugby-scores-7/rugby-scores:v1
+        ports:
+          - containerPort: 8080
