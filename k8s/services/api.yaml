@@ -23,5 +23,5 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: scores-api-production
+    app: scores-api
   type: LoadBalancer
