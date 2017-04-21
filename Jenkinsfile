@@ -1,6 +1,6 @@
 node {
   def project = 'rugby-scores-7'
-  def appName = 'scores-api'
+  def appName = 'rugby-scores'
   def feSvcName = "${appName}"
   def imageTag = "gcr.io/${project}/${appName}:${env.BRANCH_NAME}.${env.BUILD_NUMBER}"
 
