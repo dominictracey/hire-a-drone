@@ -2,7 +2,7 @@
 // Use of this source code is governed by the Apache 2.0
 // license that can be found in the LICENSE file.
 
-// Sample endpoints demonstrates a Cloud Endpoints API.
+// rugby scores server
 package main
 
 import (
@@ -52,6 +52,7 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 		errorf(w, http.StatusInternalServerError, "Could not marshal JSON: %v", err)
 		return
 	}
+
 	w.Write(b)
 }
 
