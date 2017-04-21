@@ -16,16 +16,12 @@
 
 package main
 
-import (
-	"testing"
-
-	"cloud.google.com/go/compute/metadata"
-)
+import "testing"
 
 func TestGCE(t *testing.T) {
-	i := newInstance()
+	m := newMatch()
 
-	if !metadata.OnGCE() && i.Error != "Not running on GCE" {
+	if m == nil {
 		t.Error("Test not running on GCE, but error does not indicate that fact.")
 		t.Log("ping!")
 	}
