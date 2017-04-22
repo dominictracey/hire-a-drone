@@ -22,8 +22,8 @@ func main() {
 		HandlerFunc(echoHandler)
 
 	// pilot Access
-	r.Path("/pilot").Methods("GET, POST").
-		HandlerFunc(pilotHandler)
+	r.Path("/pilot").Methods("GET").
+		HandlerFunc(pilotGetHandler)
 
 	r.Path("/auth/info/googlejwt").Methods("GET").
 		HandlerFunc(authInfoHandler)
@@ -60,7 +60,7 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 }
 
-func pilotHandler(w http.ResponseWriter, r *http.Request) {
+func pilotGetHandler(w http.ResponseWriter, r *http.Request) {
 	pilot := NewPilot()
 	pilot.Address = "30 Duffield Pl"
 
