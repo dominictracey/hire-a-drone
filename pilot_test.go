@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"log"
+	"testing"
+)
 
 func TestPilot(t *testing.T) {
 	m := NewPilot()
@@ -9,6 +12,7 @@ func TestPilot(t *testing.T) {
 	if m == nil {
 		t.Error("Test not running on GCE, but error does not indicate that fact.")
 	} else {
+		log.Println("I am here!")
 		t.Log("Ping! All is Well...")
 	}
 }

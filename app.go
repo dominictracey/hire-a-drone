@@ -9,11 +9,34 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"google.golang.org/appengine"
+
+	"github.com/gorilla/mux"
+	//"google.golang.org/appengine"
 )
+
+type Pilot struct {
+	ID       string
+	Name     string
+	Licensed bool
+	Address  string
+	Phone    string
+}
+
+func NewPilot() *Pilot {
+	var i = new(Pilot)
+
+	//i.Id = "a.assign(metadata.InstanceID)"
+	i.Name = "Fred Smith"
+	i.Licensed = true
+	i.Address = "98 Wallaby Way, Sydney AUS"
+	i.Phone = "+23 0903 91203"
+
+	return i
+}
 
 func main() {
 	r := mux.NewRouter()
@@ -35,7 +58,8 @@ func main() {
 		HandlerFunc(authInfoHandler)
 
 	http.Handle("/", r)
-
+	//log.Fatal(http.ListenAndServe(":8000", r))
+	log.Print("Listening on port 8080")
 	appengine.Main()
 }
 
@@ -69,6 +93,8 @@ func pilotGetHandler(w http.ResponseWriter, r *http.Request) {
 		errorf(w, http.StatusInternalServerError, "Could not marshal JSON: %v", err)
 		return
 	}
+
+	log.Print("call pilot GET")
 
 	w.Write(b)
 }
