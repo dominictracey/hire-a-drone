@@ -23,11 +23,12 @@ Configured a Google Compute Engine set of three cos-stable-56-9000-84-2 VMs on u
   - The Container Engine hosts a single Container Cluster with just one Node Pool. If we needed capabilities hosted outside of us-east1-d, we would need more Node Pools in the cluster.
   - The boundary between Container Engine and Kubernetes is the Node Pool (GCE) and Nodes (K8S). There are three nodes that host a variety of pods, which handle cross-cutting things like the load balancing, DNS, logging and heap management as well as application functionality. The Jenkins pod exist in only one of the nodes. By scaling the scores-api-production deployment up to 3, we get two pods in one node, one in a second and none in the third. There is however a canary pod in the third node. I need to play around some more with the scaling to see how pods are mapped to nodes.
 
-The API pods (scores-api-* ) are going to have two images. Since they won't ever be deployed independently (a pod is the smallest unit of deployment) we can configure our ReplicaSet with two images:
+The API pods (scores-api-* ) are going to have two images. Since they won't ever be deployed independently (a pod is the smallest unit of deployment) we can configure our ReplicaSet with two images see [https://cloud.google.com/endpoints/docs/quickstart-container-engine]:
   - The Google Cloud Endpoint proxy (doesn't change during development)
-  - The golang:onbuild-based image with the service implementation and unit tests
+  - The golang:onbuild-based image with the service implementation and unit tests (see [https://hub.docker.com/_/golang/])
 
 CD is set up with Jenkins:
+  - Roughly followed: [https://cloud.google.com/solutions/continuous-delivery-jenkins-container-engine]
   - Google Source Repository synchs with this github repo
   - pushing to git triggers Jenkins to:
     - pull from branch, build new image, tagged with app name, branch and environment

@@ -16,25 +16,25 @@ import (
 	"google.golang.org/appengine"
 )
 
-type Match struct {
-	Id         string
-	HomeTeam   string
-	VisitTeam  string
-	HomeScore  int
-	VisitScore int
-}
-
-func newMatch() *Match {
-	var i = new(Match)
-
-	i.Id = "a.assign(metadata.InstanceID)"
-	i.HomeTeam = "New Zealand"
-	i.VisitTeam = "Australia"
-	i.HomeScore = 45
-	i.VisitScore = 23
-
-	return i
-}
+// type Pilot struct {
+// 	Id       string
+// 	Name     string
+// 	Licensed bool
+// 	Address  string
+// 	Phone    string
+// }
+//
+// func newPilot() *Pilot {
+// 	var i = new(Pilot)
+//
+// 	//i.Id = "a.assign(metadata.InstanceID)"
+// 	i.Name = "Fred Smith"
+// 	i.Licensed = true
+// 	i.Address = "98 Wallaby Way, Sydney AUS"
+// 	i.Phone = "+23 0903 91203"
+//
+// 	return i
+// }
 
 func main() {
 	r := mux.NewRouter()
@@ -52,6 +52,9 @@ func main() {
 		HandlerFunc(authInfoHandler)
 
 	http.Handle("/", r)
+
+	pilot := newPilot()
+
 	appengine.Main()
 }
 
