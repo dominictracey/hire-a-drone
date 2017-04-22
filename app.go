@@ -12,10 +12,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/dominictracey/rugby-scores/model"
+	//"github.com/dominictracey/rugby-scores/model"
 	"github.com/gorilla/mux"
 	"google.golang.org/appengine"
-	//"google.golang.org/appengine"
 )
 
 func main() {
@@ -87,7 +86,7 @@ func NewPilot() *Pilot {
 }
 
 func pilotGetHandler(w http.ResponseWriter, r *http.Request) {
-	pilot := model.NewPilot()
+	pilot := NewPilot()
 	pilot.Address = "123 Wallaby Way"
 
 	b, err := json.Marshal(pilot)
