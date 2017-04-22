@@ -12,31 +12,11 @@ import (
 	"log"
 	"net/http"
 
-	"google.golang.org/appengine"
-
+	"github.com/dominictracey/rugby-scores/model"
 	"github.com/gorilla/mux"
+	"google.golang.org/appengine"
 	//"google.golang.org/appengine"
 )
-
-type Pilot struct {
-	ID       string
-	Name     string
-	Licensed bool
-	Address  string
-	Phone    string
-}
-
-func NewPilot() *Pilot {
-	var i = new(Pilot)
-
-	//i.Id = "a.assign(metadata.InstanceID)"
-	i.Name = "Fred Smith"
-	i.Licensed = true
-	i.Address = "98 Wallaby Way, Sydney AUS"
-	i.Phone = "+23 0903 91203"
-
-	return i
-}
 
 func main() {
 	r := mux.NewRouter()
@@ -85,7 +65,7 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func pilotGetHandler(w http.ResponseWriter, r *http.Request) {
-	pilot := NewPilot()
+	pilot := model.NewPilot()
 	pilot.Address = "30 Duffield Pl"
 
 	b, err := json.Marshal(pilot)

@@ -34,6 +34,33 @@ paths:
           $ref: "#/definitions/echoMessage"
       security:
       - api_key: []
+  "/pilot":
+    get:
+      description: "get pilot"
+      operationId: "pilot"
+      tags:
+        - pilots
+      parameters:
+        - name: since
+          in: query
+          type: integer
+          format: int64
+        - name: limit
+          in: query
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        200:
+          description: list the pilots
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/pilot"
+        default:
+          description: generic error response
+          schema:
+            $ref: "#/definitions/error"
   "/auth/info/googlejwt":
     get:
       description: "Returns the requests' authentication information."
@@ -91,6 +118,34 @@ definitions:
     properties:
       message:
         type: "string"
+  pilot:
+    type: object
+    properties:
+      ID:
+        type: integer
+        format: int64
+        readOnly: true
+      Name:
+        type: string
+        minLength: 1
+      Phone:
+        type: string
+        minLength: 1
+      Address:
+        type: string
+        minLength: 1
+      Licensed:
+        type: boolean
+  error:
+    type: object
+    required:
+      - message
+    properties:
+      code:
+        type: integer
+        format: int64
+      message:
+        type: string
   authInfoResponse:
     properties:
       id:
