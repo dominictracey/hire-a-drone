@@ -1,9 +1,9 @@
-package model
+package main
 
 import "testing"
 
-func TestGCE(t *testing.T) {
-	m := newPilot()
+func TestPilot(t *testing.T) {
+	m := NewPilot()
 	m.Address = "123 Kiwi Court, Aukland, NZ"
 
 	if m == nil {

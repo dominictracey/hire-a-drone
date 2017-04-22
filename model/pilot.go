@@ -1,4 +1,4 @@
-package model
+package main
 
 type Pilot struct {
 	ID       string
@@ -8,7 +8,7 @@ type Pilot struct {
 	Phone    string
 }
 
-func newPilot() *Pilot {
+func NewPilot() *Pilot {
 	var i = new(Pilot)
 
 	//i.Id = "a.assign(metadata.InstanceID)"

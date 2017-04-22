@@ -12,35 +12,18 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-
 	"google.golang.org/appengine"
 )
-
-// type Pilot struct {
-// 	Id       string
-// 	Name     string
-// 	Licensed bool
-// 	Address  string
-// 	Phone    string
-// }
-//
-// func newPilot() *Pilot {
-// 	var i = new(Pilot)
-//
-// 	//i.Id = "a.assign(metadata.InstanceID)"
-// 	i.Name = "Fred Smith"
-// 	i.Licensed = true
-// 	i.Address = "98 Wallaby Way, Sydney AUS"
-// 	i.Phone = "+23 0903 91203"
-//
-// 	return i
-// }
 
 func main() {
 	r := mux.NewRouter()
 
 	r.Path("/echo").Methods("POST").
 		HandlerFunc(echoHandler)
+
+	// pilot Access
+	r.Path("/pilot").Methods("GET, POST").
+		HandlerFunc(pilotHandler)
 
 	r.Path("/auth/info/googlejwt").Methods("GET").
 		HandlerFunc(authInfoHandler)
@@ -52,8 +35,6 @@ func main() {
 		HandlerFunc(authInfoHandler)
 
 	http.Handle("/", r)
-
-	pilot := newPilot()
 
 	appengine.Main()
 }
@@ -71,6 +52,19 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	b, err := json.Marshal(msg)
+	if err != nil {
+		errorf(w, http.StatusInternalServerError, "Could not marshal JSON: %v", err)
+		return
+	}
+
+	w.Write(b)
+}
+
+func pilotHandler(w http.ResponseWriter, r *http.Request) {
+	pilot := NewPilot()
+	pilot.Address = "30 Duffield Pl"
+
+	b, err := json.Marshal(pilot)
 	if err != nil {
 		errorf(w, http.StatusInternalServerError, "Could not marshal JSON: %v", err)
 		return
