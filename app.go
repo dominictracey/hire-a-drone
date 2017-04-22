@@ -66,7 +66,7 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 
 func pilotGetHandler(w http.ResponseWriter, r *http.Request) {
 	pilot := model.NewPilot()
-	pilot.Address = "30 Duffield Pl"
+	pilot.Address = "123 Wallaby Way"
 
 	b, err := json.Marshal(pilot)
 	if err != nil {
