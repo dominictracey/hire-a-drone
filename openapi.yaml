@@ -12,9 +12,10 @@ consumes:
 produces:
 - "application/json"
 schemes:
-- "https"
+- http
+- https
 paths:
-  "/echo":
+  /echo:
     post:
       description: "Echo back a given message."
       operationId: "echo"
@@ -34,12 +35,11 @@ paths:
           $ref: "#/definitions/echoMessage"
       security:
       - api_key: []
-  "/pilot":
+  /:
     get:
-      description: "get pilot"
-      operationId: "pilot"
       tags:
-        - pilots
+        - Pilots
+      operationId: findPilots
       parameters:
         - name: since
           in: query
@@ -52,13 +52,67 @@ paths:
           default: 20
       responses:
         200:
-          description: list the pilots
+          description: list the Pilot operations
           schema:
             type: array
             items:
               $ref: "#/definitions/pilot"
         default:
           description: generic error response
+          schema:
+            $ref: "#/definitions/error"
+    post:
+      tags:
+        - Pilots
+      operationId: addOne
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: "#/definitions/pilot"
+      responses:
+        201:
+          description: Created
+          schema:
+            $ref: "#/definitions/pilot"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+  /{id}:
+    parameters:
+      - type: integer
+        format: int64
+        name: id
+        in: path
+        required: true
+    put:
+      tags:
+        - Pilots
+      operationId: updateOne
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: "#/definitions/pilot"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/pilot"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+    delete:
+      tags:
+        - Pilots
+      operationId: destroyOne
+      responses:
+        204:
+          description: Deleted
+        default:
+          description: error
           schema:
             $ref: "#/definitions/error"
   "/auth/info/googlejwt":
@@ -163,7 +217,7 @@ securityDefinitions:
   # to sign a json web token. This is mostly used for server-to-server
   # communication.
   google_jwt:
-    authorizationUrl: ""
+    authorizationUrl: "https://foo.bar/"
     flow: "implicit"
     type: "oauth2"
     # This must match the 'iss' field in the JWT.
@@ -176,7 +230,7 @@ securityDefinitions:
   # ID Tokens can be obtained using OAuth2 clients, and can be used to access
   # your API on behalf of a particular user.
   google_id_token:
-    authorizationUrl: ""
+    authorizationUrl: "https://foo.bar/"
     flow: "implicit"
     type: "oauth2"
     x-google-issuer: "https://accounts.google.com"
@@ -184,7 +238,7 @@ securityDefinitions:
     x-google-audiences: "YOUR-CLIENT-ID"
   # This section configures authentication using Firebase Auth.
   firebase:
-    authorizationUrl: ""
+    authorizationUrl: "https://foo.bar/"
     flow: "implicit"
     type: "oauth2"
     x-google-issuer: "https://securetoken.google.com/YOUR-PROJECT-ID"
