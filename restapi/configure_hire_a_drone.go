@@ -2,6 +2,7 @@ package restapi
 
 import (
 	"crypto/tls"
+	"log"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -157,6 +158,7 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 		return middleware.NotImplemented("operation .Echo has not yet been implemented")
 	})
 	api.PilotsFindPilotsHandler = pilots.FindPilotsHandlerFunc(func(params pilots.FindPilotsParams) middleware.Responder {
+		log.Print("PilotsFindPilotsHandler")
 		mergedParams := pilots.NewFindPilotsParams()
 		mergedParams.Since = swag.Int64(0)
 		if params.Since != nil {
