@@ -35,3 +35,15 @@ CD is set up with Jenkins:
     - run tests with `go test`
     - on success, push image to Google Container Registry
     - deploy pod to appropriate node
+
+# Update 2 (4/24/17):
+
+Establishing a containerized REST api that can be deployed behind the Google Container Engine ESP proxy. The idea is pretty cool (the framework handles the scaling, edge server topology, security, etc.). Compared to the AWS counterpart there are some things lacking. For instance, the API key management doesn't provide any real reporting or throttling that would allow you to control and bill integration partners leveraging your services.
+
+I've started with the `golang:onbuild` docker image but spent some time looking at `golang:<version>` and `golang:alpine` to understand how the golang ecosystem supports containerization. Package management and imports, particularly within your own golang app can be subtly tricky.
+
+There is so much boilerplate code in standing up simple REST apis that I looked at a couple of options for jumpstarting the work. I looked at [https://github.com/tideland/gorest](tideland/gorest) for a bit but ended up digging into [http://editor.swagger.io/#!/](swagger) more. Rather than using the native codegen in Swagger I am going to work with [https://goswagger.io/](go-swagger) which seems more robust. Code generation has the pain points of creating more bloated source and having an up-front ramp-up cost, but once established correctly you have a much nicer development experience.
+
+My challenge in go-swagger was that it wants to run in https by default and that requires X.509 certs to be installed in the image. GKE has it's own idea of "secrets" that I didn't spend the time to understand how we can propogate into the containers and then access from golang binaries. My thought was that SSL should be established between the clients and the ESP proxy and that we can just run over HTTP inside the cluster. It saves a bit of processing overhead and, since the api implementation containers aren't externally addressable, shouldn't reduce the effective security.
+
+ 
