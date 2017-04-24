@@ -5,7 +5,6 @@ Submit and view scores
 
     Schemes:
       http
-      https
     Host: scores-api.endpoints.rugby-scores-7.cloud.goog
     BasePath: /
     Version: 1.0.0

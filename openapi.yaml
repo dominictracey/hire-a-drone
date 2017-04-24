@@ -13,7 +13,6 @@ produces:
 - "application/json"
 schemes:
 - http
-- https
 paths:
   /echo:
     post:
