@@ -30,75 +30,6 @@ func init() {
   "host": "scores-api.endpoints.rugby-scores-7.cloud.goog",
   "basePath": "/",
   "paths": {
-    "/": {
-      "get": {
-        "tags": [
-          "Pilots"
-        ],
-        "operationId": "findPilots",
-        "parameters": [
-          {
-            "type": "integer",
-            "format": "int64",
-            "name": "since",
-            "in": "query"
-          },
-          {
-            "type": "integer",
-            "format": "int32",
-            "default": 20,
-            "name": "limit",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "list the Pilot operations",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/pilot"
-              }
-            }
-          },
-          "default": {
-            "description": "generic error response",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Pilots"
-        ],
-        "operationId": "addOne",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/pilot"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Created",
-            "schema": {
-              "$ref": "#/definitions/pilot"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      }
-    },
     "/auth/info/auth0": {
       "get": {
         "description": "Returns the requests' authentication information.",
@@ -220,7 +151,76 @@ func init() {
         }
       }
     },
-    "/{id}": {
+    "/pilot": {
+      "get": {
+        "tags": [
+          "Pilots"
+        ],
+        "operationId": "findPilots",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "name": "since",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int32",
+            "default": 20,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "list the Pilot operations",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/pilot"
+              }
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Pilots"
+        ],
+        "operationId": "addOne",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/pilot"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/pilot"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/pilot/{id}": {
       "put": {
         "tags": [
           "Pilots"

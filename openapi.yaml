@@ -34,7 +34,7 @@ paths:
           $ref: "#/definitions/echoMessage"
       security:
       - api_key: []
-  /:
+  /pilot:
     get:
       tags:
         - Pilots
@@ -78,7 +78,7 @@ paths:
           description: error
           schema:
             $ref: "#/definitions/error"
-  /{id}:
+  /pilot/{id}:
     parameters:
       - type: integer
         format: int64

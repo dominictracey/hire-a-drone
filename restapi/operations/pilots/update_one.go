@@ -27,7 +27,7 @@ func NewUpdateOne(ctx *middleware.Context, handler UpdateOneHandler) *UpdateOne 
 	return &UpdateOne{Context: ctx, Handler: handler}
 }
 
-/*UpdateOne swagger:route PUT /{id} Pilots updateOne
+/*UpdateOne swagger:route PUT /pilot/{id} Pilots updateOne
 
 UpdateOne update one API
 

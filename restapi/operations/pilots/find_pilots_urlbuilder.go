@@ -40,7 +40,7 @@ func (o *FindPilotsURL) SetBasePath(bp string) {
 func (o *FindPilotsURL) Build() (*url.URL, error) {
 	var result url.URL
 
-	var _path = "/"
+	var _path = "/pilot"
 
 	_basePath := o._basePath
 	if _basePath == "" {

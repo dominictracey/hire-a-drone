@@ -38,7 +38,7 @@ func init() {
 // NewServer creates a new api hire a drone server but does not configure it
 func NewServer(api *operations.HireADroneAPI) *Server {
 	s := new(Server)
-	s.Port = 8080 // added override here
+
 	s.api = api
 	return s
 }

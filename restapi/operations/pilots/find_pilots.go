@@ -27,7 +27,7 @@ func NewFindPilots(ctx *middleware.Context, handler FindPilotsHandler) *FindPilo
 	return &FindPilots{Context: ctx, Handler: handler}
 }
 
-/*FindPilots swagger:route GET / Pilots findPilots
+/*FindPilots swagger:route GET /pilot Pilots findPilots
 
 FindPilots find pilots API
 

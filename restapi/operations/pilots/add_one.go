@@ -27,7 +27,7 @@ func NewAddOne(ctx *middleware.Context, handler AddOneHandler) *AddOne {
 	return &AddOne{Context: ctx, Handler: handler}
 }
 
-/*AddOne swagger:route POST / Pilots addOne
+/*AddOne swagger:route POST /pilot Pilots addOne
 
 AddOne add one API
 
