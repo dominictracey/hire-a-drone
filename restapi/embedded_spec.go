@@ -153,10 +153,18 @@ func init() {
     },
     "/pilot": {
       "get": {
+        "produces": [
+          "application/json"
+        ],
         "tags": [
           "Pilots"
         ],
         "operationId": "findPilots",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
         "parameters": [
           {
             "type": "integer",
@@ -191,10 +199,18 @@ func init() {
         }
       },
       "post": {
+        "produces": [
+          "application/json"
+        ],
         "tags": [
           "Pilots"
         ],
         "operationId": "addOne",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
         "parameters": [
           {
             "name": "body",
@@ -222,10 +238,18 @@ func init() {
     },
     "/pilot/{id}": {
       "put": {
+        "produces": [
+          "application/json"
+        ],
         "tags": [
           "Pilots"
         ],
         "operationId": "updateOne",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
         "parameters": [
           {
             "name": "body",
@@ -251,10 +275,18 @@ func init() {
         }
       },
       "delete": {
+        "produces": [
+          "application/json"
+        ],
         "tags": [
           "Pilots"
         ],
         "operationId": "destroyOne",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
         "responses": {
           "204": {
             "description": "Deleted"

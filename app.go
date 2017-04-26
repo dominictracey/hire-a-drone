@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	loads "github.com/go-openapi/loads"
-	flags "github.com/jessevdk/go-flags"
+	"github.com/go-openapi/loads"
+	"github.com/jessevdk/go-flags"
 
 	"github.com/dominictracey/rugby-scores/restapi"
 	"github.com/dominictracey/rugby-scores/restapi/operations"

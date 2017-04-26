@@ -32,7 +32,7 @@ func NewHireADroneAPI(spec *loads.Document) *HireADroneAPI {
 		ServeError:      errors.ServeError,
 		JSONConsumer:    runtime.JSONConsumer(),
 		JSONProducer:    runtime.JSONProducer(),
-		PilotsAddOneHandler: pilots.AddOneHandlerFunc(func(params pilots.AddOneParams) middleware.Responder {
+		PilotsAddOneHandler: pilots.AddOneHandlerFunc(func(params pilots.AddOneParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PilotsAddOne has not yet been implemented")
 		}),
 		AuthInfoFirebaseHandler: AuthInfoFirebaseHandlerFunc(func(params AuthInfoFirebaseParams, principal interface{}) middleware.Responder {
@@ -47,25 +47,21 @@ func NewHireADroneAPI(spec *loads.Document) *HireADroneAPI {
 		AuthInfoGoogleJwtHandler: AuthInfoGoogleJwtHandlerFunc(func(params AuthInfoGoogleJwtParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation AuthInfoGoogleJwt has not yet been implemented")
 		}),
-		PilotsDestroyOneHandler: pilots.DestroyOneHandlerFunc(func(params pilots.DestroyOneParams) middleware.Responder {
+		PilotsDestroyOneHandler: pilots.DestroyOneHandlerFunc(func(params pilots.DestroyOneParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PilotsDestroyOne has not yet been implemented")
 		}),
 		EchoHandler: EchoHandlerFunc(func(params EchoParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation Echo has not yet been implemented")
 		}),
-		PilotsFindPilotsHandler: pilots.FindPilotsHandlerFunc(func(params pilots.FindPilotsParams) middleware.Responder {
+		PilotsFindPilotsHandler: pilots.FindPilotsHandlerFunc(func(params pilots.FindPilotsParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PilotsFindPilots has not yet been implemented")
 		}),
-		PilotsUpdateOneHandler: pilots.UpdateOneHandlerFunc(func(params pilots.UpdateOneParams) middleware.Responder {
+		PilotsUpdateOneHandler: pilots.UpdateOneHandlerFunc(func(params pilots.UpdateOneParams, principal interface{}) middleware.Responder {
 			return middleware.NotImplemented("operation PilotsUpdateOne has not yet been implemented")
 		}),
 
 		GoogleIDTokenAuth: func(token string, scopes []string) (interface{}, error) {
 			return nil, errors.NotImplemented("oauth2 bearer auth (google_id_token) has not yet been implemented")
-		},
-
-		GoogleJwtAuth: func(token string, scopes []string) (interface{}, error) {
-			return nil, errors.NotImplemented("oauth2 bearer auth (google_jwt) has not yet been implemented")
 		},
 
 		Auth0JwkAuth: func(token string, scopes []string) (interface{}, error) {
@@ -74,6 +70,10 @@ func NewHireADroneAPI(spec *loads.Document) *HireADroneAPI {
 
 		FirebaseAuth: func(token string, scopes []string) (interface{}, error) {
 			return nil, errors.NotImplemented("oauth2 bearer auth (firebase) has not yet been implemented")
+		},
+
+		GoogleJwtAuth: func(token string, scopes []string) (interface{}, error) {
+			return nil, errors.NotImplemented("oauth2 bearer auth (google_jwt) has not yet been implemented")
 		},
 
 		// Applies when the "key" query is set
@@ -102,10 +102,6 @@ type HireADroneAPI struct {
 	// it performs authentication based on an oauth2 bearer token provided in the request
 	GoogleIDTokenAuth func(string, []string) (interface{}, error)
 
-	// GoogleJwtAuth registers a function that takes an access token and a collection of required scopes and returns a principal
-	// it performs authentication based on an oauth2 bearer token provided in the request
-	GoogleJwtAuth func(string, []string) (interface{}, error)
-
 	// Auth0JwkAuth registers a function that takes an access token and a collection of required scopes and returns a principal
 	// it performs authentication based on an oauth2 bearer token provided in the request
 	Auth0JwkAuth func(string, []string) (interface{}, error)
@@ -113,6 +109,10 @@ type HireADroneAPI struct {
 	// FirebaseAuth registers a function that takes an access token and a collection of required scopes and returns a principal
 	// it performs authentication based on an oauth2 bearer token provided in the request
 	FirebaseAuth func(string, []string) (interface{}, error)
+
+	// GoogleJwtAuth registers a function that takes an access token and a collection of required scopes and returns a principal
+	// it performs authentication based on an oauth2 bearer token provided in the request
+	GoogleJwtAuth func(string, []string) (interface{}, error)
 
 	// APIKeyAuth registers a function that takes a token and returns a principal
 	// it performs authentication based on an api key key provided in the query
@@ -203,16 +203,16 @@ func (o *HireADroneAPI) Validate() error {
 		unregistered = append(unregistered, "GoogleIDTokenAuth")
 	}
 
-	if o.GoogleJwtAuth == nil {
-		unregistered = append(unregistered, "GoogleJwtAuth")
-	}
-
 	if o.Auth0JwkAuth == nil {
 		unregistered = append(unregistered, "Auth0JwkAuth")
 	}
 
 	if o.FirebaseAuth == nil {
 		unregistered = append(unregistered, "FirebaseAuth")
+	}
+
+	if o.GoogleJwtAuth == nil {
+		unregistered = append(unregistered, "GoogleJwtAuth")
 	}
 
 	if o.APIKeyAuth == nil {
@@ -278,10 +278,6 @@ func (o *HireADroneAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme
 
 			result[name] = security.BearerAuth(scheme.Name, o.GoogleIDTokenAuth)
 
-		case "google_jwt":
-
-			result[name] = security.BearerAuth(scheme.Name, o.GoogleJwtAuth)
-
 		case "auth0_jwk":
 
 			result[name] = security.BearerAuth(scheme.Name, o.Auth0JwkAuth)
@@ -289,6 +285,10 @@ func (o *HireADroneAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme
 		case "firebase":
 
 			result[name] = security.BearerAuth(scheme.Name, o.FirebaseAuth)
+
+		case "google_jwt":
+
+			result[name] = security.BearerAuth(scheme.Name, o.GoogleJwtAuth)
 
 		case "api_key":
 
@@ -340,9 +340,6 @@ func (o *HireADroneAPI) HandlerFor(method, path string) (http.Handler, bool) {
 	um := strings.ToUpper(method)
 	if _, ok := o.handlers[um]; !ok {
 		return nil, false
-	}
-	if path == "/" {
-		path = ""
 	}
 	h, ok := o.handlers[um][path]
 	return h, ok

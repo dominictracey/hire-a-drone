@@ -39,6 +39,8 @@ paths:
       tags:
         - Pilots
       operationId: findPilots
+      produces:
+      - "application/json"
       parameters:
         - name: since
           in: query
@@ -60,10 +62,14 @@ paths:
           description: generic error response
           schema:
             $ref: "#/definitions/error"
+      security:
+      - api_key: []
     post:
       tags:
         - Pilots
       operationId: addOne
+      produces:
+      - "application/json"
       parameters:
         - name: body
           in: body
@@ -78,6 +84,8 @@ paths:
           description: error
           schema:
             $ref: "#/definitions/error"
+      security:
+      - api_key: []
   /pilot/{id}:
     parameters:
       - type: integer
@@ -89,6 +97,8 @@ paths:
       tags:
         - Pilots
       operationId: updateOne
+      produces:
+      - "application/json"
       parameters:
         - name: body
           in: body
@@ -103,10 +113,14 @@ paths:
           description: error
           schema:
             $ref: "#/definitions/error"
+      security:
+      - api_key: []
     delete:
       tags:
         - Pilots
       operationId: destroyOne
+      produces:
+      - "application/json"
       responses:
         204:
           description: Deleted
@@ -114,6 +128,8 @@ paths:
           description: error
           schema:
             $ref: "#/definitions/error"
+      security:
+      - api_key: []
   "/auth/info/googlejwt":
     get:
       description: "Returns the requests' authentication information."
