@@ -1,10 +1,10 @@
 # [START swagger]
 swagger: "2.0"
 info:
-  description: "Submit and view scores"
-  title: "Rugby Scores API"
+  description: "A simple Google Cloud Endpoints API example."
+  title: "Endpoints Example"
   version: "1.0.0"
-host: "scores-api.endpoints.rugby-scores-7.cloud.goog"
+host: "echo-api.endpoints.YOUR-PROJECT-ID.cloud.goog"
 # [END swagger]
 basePath: "/"
 consumes:
@@ -12,9 +12,9 @@ consumes:
 produces:
 - "application/json"
 schemes:
-- http
+- "https"
 paths:
-  /echo:
+  "/echo":
     post:
       description: "Echo back a given message."
       operationId: "echo"
@@ -32,102 +32,6 @@ paths:
         required: true
         schema:
           $ref: "#/definitions/echoMessage"
-      security:
-      - api_key: []
-  /pilot:
-    get:
-      tags:
-        - Pilots
-      operationId: findPilots
-      produces:
-      - "application/json"
-      parameters:
-        - name: since
-          in: query
-          type: integer
-          format: int64
-        - name: limit
-          in: query
-          type: integer
-          format: int32
-          default: 20
-      responses:
-        200:
-          description: list the Pilot operations
-          schema:
-            type: array
-            items:
-              $ref: "#/definitions/pilot"
-        default:
-          description: generic error response
-          schema:
-            $ref: "#/definitions/error"
-      security:
-      - api_key: []
-    post:
-      tags:
-        - Pilots
-      operationId: addOne
-      produces:
-      - "application/json"
-      parameters:
-        - name: body
-          in: body
-          schema:
-            $ref: "#/definitions/pilot"
-      responses:
-        201:
-          description: Created
-          schema:
-            $ref: "#/definitions/pilot"
-        default:
-          description: error
-          schema:
-            $ref: "#/definitions/error"
-      security:
-      - api_key: []
-  /pilot/{id}:
-    parameters:
-      - type: integer
-        format: int64
-        name: id
-        in: path
-        required: true
-    put:
-      tags:
-        - Pilots
-      operationId: updateOne
-      produces:
-      - "application/json"
-      parameters:
-        - name: body
-          in: body
-          schema:
-            $ref: "#/definitions/pilot"
-      responses:
-        200:
-          description: OK
-          schema:
-            $ref: "#/definitions/pilot"
-        default:
-          description: error
-          schema:
-            $ref: "#/definitions/error"
-      security:
-      - api_key: []
-    delete:
-      tags:
-        - Pilots
-      operationId: destroyOne
-      produces:
-      - "application/json"
-      responses:
-        204:
-          description: Deleted
-        default:
-          description: error
-          schema:
-            $ref: "#/definitions/error"
       security:
       - api_key: []
   "/auth/info/googlejwt":
@@ -187,34 +91,6 @@ definitions:
     properties:
       message:
         type: "string"
-  pilot:
-    type: object
-    properties:
-      ID:
-        type: integer
-        format: int64
-        readOnly: true
-      Name:
-        type: string
-        minLength: 1
-      Phone:
-        type: string
-        minLength: 1
-      Address:
-        type: string
-        minLength: 1
-      Licensed:
-        type: boolean
-  error:
-    type: object
-    required:
-      - message
-    properties:
-      code:
-        type: integer
-        format: int64
-      message:
-        type: string
   authInfoResponse:
     properties:
       id:
@@ -232,7 +108,7 @@ securityDefinitions:
   # to sign a json web token. This is mostly used for server-to-server
   # communication.
   google_jwt:
-    authorizationUrl: "https://foo.bar/"
+    authorizationUrl: ""
     flow: "implicit"
     type: "oauth2"
     # This must match the 'iss' field in the JWT.
@@ -245,7 +121,7 @@ securityDefinitions:
   # ID Tokens can be obtained using OAuth2 clients, and can be used to access
   # your API on behalf of a particular user.
   google_id_token:
-    authorizationUrl: "https://foo.bar/"
+    authorizationUrl: ""
     flow: "implicit"
     type: "oauth2"
     x-google-issuer: "https://accounts.google.com"
@@ -253,7 +129,7 @@ securityDefinitions:
     x-google-audiences: "YOUR-CLIENT-ID"
   # This section configures authentication using Firebase Auth.
   firebase:
-    authorizationUrl: "https://foo.bar/"
+    authorizationUrl: ""
     flow: "implicit"
     type: "oauth2"
     x-google-issuer: "https://securetoken.google.com/YOUR-PROJECT-ID"
