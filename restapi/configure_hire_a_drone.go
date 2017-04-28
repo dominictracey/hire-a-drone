@@ -56,7 +56,7 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 		return nil, errors.New(401, "incorrect api key auth")
 	}
 
-	api.Logger("Key handler configured for api")
+	api.Logger("Api key handler configured for api")
 
 	api.AuthInfoFirebaseHandler = operations.AuthInfoFirebaseHandlerFunc(func(params operations.AuthInfoFirebaseParams, principal *models.Principal) middleware.Responder {
 		return middleware.NotImplemented("operation .AuthInfoFirebase has not yet been implemented")
