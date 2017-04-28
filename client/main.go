@@ -101,7 +101,7 @@ func doJWT() (*http.Response, error) {
 	jwt := &jws.ClaimSet{
 		Iss:   "jwt-client.endpoints.sample.google.com",
 		Sub:   "foo!",
-		Aud:   "echo.endpoints.sample.google.com",
+		Aud:   "scores-api.endpoints.rugby-scores-7.cloud.goog",
 		Scope: "email",
 		Iat:   iat.Unix(),
 		Exp:   exp.Unix(),
@@ -110,6 +110,8 @@ func doJWT() (*http.Response, error) {
 		Algorithm: "RS256",
 		Typ:       "JWT",
 	}
+
+	log.Println(jwsHeader, jwt, rsaKey)
 
 	msg, err := jws.Encode(jwsHeader, jwt, rsaKey)
 	if err != nil {

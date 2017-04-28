@@ -32,7 +32,7 @@ spec:
           "-p", "8081",
           "-a", "127.0.0.1:8080",
           "-s", "scores-api.endpoints.rugby-scores-7.cloud.goog",
-          "-v", "2017-04-26r1",
+          "-v", "2017-04-26r0",
         ]
       # [END esp]
         ports:
