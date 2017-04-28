@@ -32,6 +32,8 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 	// Example:
 	api.Logger = log.Printf
 
+	api.Logger("Logger started for api")
+
 	api.JSONConsumer = runtime.JSONConsumer()
 
 	api.JSONProducer = runtime.JSONProducer()
@@ -53,6 +55,8 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 		api.Logger("Access attempt with incorrect api key auth: %s", token)
 		return nil, errors.New(401, "incorrect api key auth")
 	}
+
+	api.Logger("Key handler configured for api")
 
 	api.AuthInfoFirebaseHandler = operations.AuthInfoFirebaseHandlerFunc(func(params operations.AuthInfoFirebaseParams, principal *models.Principal) middleware.Responder {
 		return middleware.NotImplemented("operation .AuthInfoFirebase has not yet been implemented")
