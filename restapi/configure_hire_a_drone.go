@@ -2,6 +2,7 @@ package restapi
 
 import (
 	"crypto/tls"
+	"log"
 	"net/http"
 
 	errors "github.com/go-openapi/errors"
@@ -14,27 +15,8 @@ import (
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
-func echoHandler(message *models.EchoMessage) (*models.EchoMessage, error) {
-	return message, nil
-	// var msg interface{}
-	// if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
-	// 	if _, ok := err.(*json.SyntaxError); ok {
-	// 		errorf(w, http.StatusBadRequest, "Body was not valid JSON: %v", err)
-	// 		return
-	// 	}
-	// 	errorf(w, http.StatusInternalServerError, "Could not get body: %v", err)
-	// 	return
-	// }
-	//
-	// b, err := json.Marshal(msg)
-	// if err != nil {
-	// 	errorf(w, http.StatusInternalServerError, "Could not marshal JSON: %v", err)
-	// 	return
-	// }
-	// return b
-}
 
-//go:generate swagger generate server --target .. --name hire-a-drone --spec ../openApi.yaml
+//go:generate swagger generate server --target .. --name hire-a-drone --spec ../openApi.yaml --principal models.Principal
 
 func configureFlags(api *operations.HireADroneAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
@@ -48,32 +30,36 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 	// Expected interface func(string, ...interface{})
 	//
 	// Example:
-	// s.api.Logger = log.Printf
+	api.Logger = log.Printf
 
 	api.JSONConsumer = runtime.JSONConsumer()
 
 	api.JSONProducer = runtime.JSONProducer()
 
-	api.FirebaseAuth = func(token string, scopes []string) (interface{}, error) {
+	api.FirebaseAuth = func(token string, scopes []string) (*models.Principal, error) {
 		return nil, errors.NotImplemented("oauth2 bearer auth (firebase) has not yet been implemented")
 	}
 
 	// Applies when the "key" query is set
-	api.APIKeyAuth = func(token string) (interface{}, error) {
-		return nil, errors.NotImplemented("api key auth (api_key) key from query param [key] has not yet been implemented")
+	api.APIKeyAuth = func(token string) (*models.Principal, error) {
+		//api.Logger("Trying auth with key", token)
+		if token != "" {
+			prin := models.Principal(token)
+			if api.Logger != nil {
+				api.Logger("Trying auth with key %s", prin)
+			}
+			return &prin, nil
+		}
+		api.Logger("Access attempt with incorrect api key auth: %s", token)
+		return nil, errors.New(401, "incorrect api key auth")
 	}
 
-	api.AuthInfoFirebaseHandler = operations.AuthInfoFirebaseHandlerFunc(func(params operations.AuthInfoFirebaseParams, principal interface{}) middleware.Responder {
+	api.AuthInfoFirebaseHandler = operations.AuthInfoFirebaseHandlerFunc(func(params operations.AuthInfoFirebaseParams, principal *models.Principal) middleware.Responder {
 		return middleware.NotImplemented("operation .AuthInfoFirebase has not yet been implemented")
 	})
-	api.EchoHandler = operations.EchoHandlerFunc(func(params operations.EchoParams, principal interface{}) middleware.Responder {
-		mess, err := echoHandler(params.Message)
-		if err != nil {
-			return nil //operations.NewEchoOK().WithPayload(err)
-			//return operations.NewEcho Default(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
-		}
-		return operations.NewEchoOK().WithPayload(mess)
-		//return middleware.NotImplemented("operation .Echo has not yet been implemented")
+	api.EchoHandler = operations.EchoHandlerFunc(func(params operations.EchoParams, principal *models.Principal) middleware.Responder {
+		api.Logger("Trying echo %s", *params.Message)
+		return operations.NewEchoOK().WithPayload(params.Message)
 	})
 
 	api.ServerShutdown = func() {}

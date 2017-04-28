@@ -1,7 +1,10 @@
 package restapi
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -19,7 +22,9 @@ import (
 )
 
 const (
-	schemeHTTP = "http"
+	schemeHTTP  = "http"
+	schemeHTTPS = "https"
+	schemeUnix  = "unix"
 )
 
 var defaultSchemes []string
@@ -33,7 +38,7 @@ func init() {
 // NewServer creates a new api hire a drone server but does not configure it
 func NewServer(api *operations.HireADroneAPI) *Server {
 	s := new(Server)
-
+	s.Port = 8080
 	s.api = api
 	return s
 }
@@ -151,27 +156,27 @@ func (s *Server) Serve() (err error) {
 
 	var wg sync.WaitGroup
 
-	// if s.hasScheme(schemeUnix) {
-	// 	domainSocket := &graceful.Server{Server: new(http.Server)}
-	// 	domainSocket.MaxHeaderBytes = int(s.MaxHeaderSize)
-	// 	domainSocket.Handler = s.handler
-	// 	domainSocket.LogFunc = s.Logf
-	// 	if int64(s.CleanupTimeout) > 0 {
-	// 		domainSocket.Timeout = s.CleanupTimeout
-	// 	}
-	//
-	// 	configureServer(domainSocket, "unix")
-	//
-	// 	wg.Add(1)
-	// 	s.Logf("Serving hire a drone at unix://%s", s.SocketPath)
-	// 	go func(l net.Listener) {
-	// 		defer wg.Done()
-	// 		if err := domainSocket.Serve(l); err != nil {
-	// 			s.Fatalf("%v", err)
-	// 		}
-	// 		s.Logf("Stopped serving hire a drone at unix://%s", s.SocketPath)
-	// 	}(s.domainSocketL)
-	// }
+	if s.hasScheme(schemeUnix) {
+		domainSocket := &graceful.Server{Server: new(http.Server)}
+		domainSocket.MaxHeaderBytes = int(s.MaxHeaderSize)
+		domainSocket.Handler = s.handler
+		domainSocket.LogFunc = s.Logf
+		if int64(s.CleanupTimeout) > 0 {
+			domainSocket.Timeout = s.CleanupTimeout
+		}
+
+		configureServer(domainSocket, "unix")
+
+		wg.Add(1)
+		s.Logf("Serving hire a drone at unix://%s", s.SocketPath)
+		go func(l net.Listener) {
+			defer wg.Done()
+			if err := domainSocket.Serve(l); err != nil {
+				s.Fatalf("%v", err)
+			}
+			s.Logf("Stopped serving hire a drone at unix://%s", s.SocketPath)
+		}(s.domainSocketL)
+	}
 
 	if s.hasScheme(schemeHTTP) {
 		httpServer := &graceful.Server{Server: new(http.Server)}
@@ -204,90 +209,90 @@ func (s *Server) Serve() (err error) {
 		}(s.httpServerL)
 	}
 
-	// if s.hasScheme(schemeHTTPS) {
-	// 	httpsServer := &graceful.Server{Server: new(http.Server)}
-	// 	httpsServer.MaxHeaderBytes = int(s.MaxHeaderSize)
-	// 	httpsServer.ReadTimeout = s.TLSReadTimeout
-	// 	httpsServer.WriteTimeout = s.TLSWriteTimeout
-	// 	httpsServer.SetKeepAlivesEnabled(int64(s.TLSKeepAlive) > 0)
-	// 	httpsServer.TCPKeepAlive = s.TLSKeepAlive
-	// 	if s.TLSListenLimit > 0 {
-	// 		httpsServer.ListenLimit = s.TLSListenLimit
-	// 	}
-	// 	if int64(s.CleanupTimeout) > 0 {
-	// 		httpsServer.Timeout = s.CleanupTimeout
-	// 	}
-	// 	httpsServer.Handler = s.handler
-	// 	httpsServer.LogFunc = s.Logf
-	//
-	// 	// Inspired by https://blog.bracebin.com/achieving-perfect-ssl-labs-score-with-go
-	// 	httpsServer.TLSConfig = &tls.Config{
-	// 		// Causes servers to use Go's default ciphersuite preferences,
-	// 		// which are tuned to avoid attacks. Does nothing on clients.
-	// 		PreferServerCipherSuites: true,
-	// 		// Only use curves which have assembly implementations
-	// 		// https://github.com/golang/go/tree/master/src/crypto/elliptic
-	// 		CurvePreferences: []tls.CurveID{tls.CurveP256},
-	// 		// Use modern tls mode https://wiki.mozilla.org/Security/Server_Side_TLS#Modern_compatibility
-	// 		NextProtos: []string{"http/1.1", "h2"},
-	// 		// https://www.owasp.org/index.php/Transport_Layer_Protection_Cheat_Sheet#Rule_-_Only_Support_Strong_Protocols
-	// 		MinVersion: tls.VersionTLS12,
-	// 		// These ciphersuites support Forward Secrecy: https://en.wikipedia.org/wiki/Forward_secrecy
-	// 		CipherSuites: []uint16{
-	// 			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-	// 			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-	// 			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-	// 			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-	// 		},
-	// 	}
-	//
-	// 	if s.TLSCertificate != "" && s.TLSCertificateKey != "" {
-	// 		httpsServer.TLSConfig.Certificates = make([]tls.Certificate, 1)
-	// 		httpsServer.TLSConfig.Certificates[0], err = tls.LoadX509KeyPair(string(s.TLSCertificate), string(s.TLSCertificateKey))
-	// 	}
-	//
-	// 	if s.TLSCACertificate != "" {
-	// 		caCert, err := ioutil.ReadFile(string(s.TLSCACertificate))
-	// 		if err != nil {
-	// 			log.Fatal(err)
-	// 		}
-	// 		caCertPool := x509.NewCertPool()
-	// 		caCertPool.AppendCertsFromPEM(caCert)
-	// 		httpsServer.TLSConfig.ClientCAs = caCertPool
-	// 		httpsServer.TLSConfig.ClientAuth = tls.RequireAndVerifyClientCert
-	// 	}
-	//
-	// 	configureTLS(httpsServer.TLSConfig)
-	// 	httpsServer.TLSConfig.BuildNameToCertificate()
-	//
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	//
-	// 	if len(httpsServer.TLSConfig.Certificates) == 0 {
-	// 		if s.TLSCertificate == "" {
-	// 			if s.TLSCertificateKey == "" {
-	// 				s.Fatalf("the required flags `--tls-certificate` and `--tls-key` were not specified")
-	// 			}
-	// 			s.Fatalf("the required flag `--tls-certificate` was not specified")
-	// 		}
-	// 		if s.TLSCertificateKey == "" {
-	// 			s.Fatalf("the required flag `--tls-key` was not specified")
-	// 		}
-	// 	}
-	//
-	// 	configureServer(httpsServer, "https")
-	//
-	// 	wg.Add(1)
-	// 	s.Logf("Serving hire a drone at https://%s", s.httpsServerL.Addr())
-	// 	go func(l net.Listener) {
-	// 		defer wg.Done()
-	// 		if err := httpsServer.Serve(l); err != nil {
-	// 			s.Fatalf("%v", err)
-	// 		}
-	// 		s.Logf("Stopped serving hire a drone at https://%s", l.Addr())
-	// 	}(tls.NewListener(s.httpsServerL, httpsServer.TLSConfig))
-	// }
+	if s.hasScheme(schemeHTTPS) {
+		httpsServer := &graceful.Server{Server: new(http.Server)}
+		httpsServer.MaxHeaderBytes = int(s.MaxHeaderSize)
+		httpsServer.ReadTimeout = s.TLSReadTimeout
+		httpsServer.WriteTimeout = s.TLSWriteTimeout
+		httpsServer.SetKeepAlivesEnabled(int64(s.TLSKeepAlive) > 0)
+		httpsServer.TCPKeepAlive = s.TLSKeepAlive
+		if s.TLSListenLimit > 0 {
+			httpsServer.ListenLimit = s.TLSListenLimit
+		}
+		if int64(s.CleanupTimeout) > 0 {
+			httpsServer.Timeout = s.CleanupTimeout
+		}
+		httpsServer.Handler = s.handler
+		httpsServer.LogFunc = s.Logf
+
+		// Inspired by https://blog.bracebin.com/achieving-perfect-ssl-labs-score-with-go
+		httpsServer.TLSConfig = &tls.Config{
+			// Causes servers to use Go's default ciphersuite preferences,
+			// which are tuned to avoid attacks. Does nothing on clients.
+			PreferServerCipherSuites: true,
+			// Only use curves which have assembly implementations
+			// https://github.com/golang/go/tree/master/src/crypto/elliptic
+			CurvePreferences: []tls.CurveID{tls.CurveP256},
+			// Use modern tls mode https://wiki.mozilla.org/Security/Server_Side_TLS#Modern_compatibility
+			NextProtos: []string{"http/1.1", "h2"},
+			// https://www.owasp.org/index.php/Transport_Layer_Protection_Cheat_Sheet#Rule_-_Only_Support_Strong_Protocols
+			MinVersion: tls.VersionTLS12,
+			// These ciphersuites support Forward Secrecy: https://en.wikipedia.org/wiki/Forward_secrecy
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			},
+		}
+
+		if s.TLSCertificate != "" && s.TLSCertificateKey != "" {
+			httpsServer.TLSConfig.Certificates = make([]tls.Certificate, 1)
+			httpsServer.TLSConfig.Certificates[0], err = tls.LoadX509KeyPair(string(s.TLSCertificate), string(s.TLSCertificateKey))
+		}
+
+		if s.TLSCACertificate != "" {
+			caCert, err := ioutil.ReadFile(string(s.TLSCACertificate))
+			if err != nil {
+				log.Fatal(err)
+			}
+			caCertPool := x509.NewCertPool()
+			caCertPool.AppendCertsFromPEM(caCert)
+			httpsServer.TLSConfig.ClientCAs = caCertPool
+			httpsServer.TLSConfig.ClientAuth = tls.RequireAndVerifyClientCert
+		}
+
+		configureTLS(httpsServer.TLSConfig)
+		httpsServer.TLSConfig.BuildNameToCertificate()
+
+		if err != nil {
+			return err
+		}
+
+		if len(httpsServer.TLSConfig.Certificates) == 0 {
+			if s.TLSCertificate == "" {
+				if s.TLSCertificateKey == "" {
+					s.Fatalf("the required flags `--tls-certificate` and `--tls-key` were not specified")
+				}
+				s.Fatalf("the required flag `--tls-certificate` was not specified")
+			}
+			if s.TLSCertificateKey == "" {
+				s.Fatalf("the required flag `--tls-key` was not specified")
+			}
+		}
+
+		configureServer(httpsServer, "https")
+
+		wg.Add(1)
+		s.Logf("Serving hire a drone at https://%s", s.httpsServerL.Addr())
+		go func(l net.Listener) {
+			defer wg.Done()
+			if err := httpsServer.Serve(l); err != nil {
+				s.Fatalf("%v", err)
+			}
+			s.Logf("Stopped serving hire a drone at https://%s", l.Addr())
+		}(tls.NewListener(s.httpsServerL, httpsServer.TLSConfig))
+	}
 
 	wg.Wait()
 	return nil
@@ -299,36 +304,36 @@ func (s *Server) Listen() error {
 		return nil
 	}
 
-	// if s.hasScheme(schemeHTTPS) {
-	// 	// Use http host if https host wasn't defined
-	// 	if s.TLSHost == "" {
-	// 		s.TLSHost = s.Host
-	// 	}
-	// 	// Use http listen limit if https listen limit wasn't defined
-	// 	if s.TLSListenLimit == 0 {
-	// 		s.TLSListenLimit = s.ListenLimit
-	// 	}
-	// 	// Use http tcp keep alive if https tcp keep alive wasn't defined
-	// 	if int64(s.TLSKeepAlive) == 0 {
-	// 		s.TLSKeepAlive = s.KeepAlive
-	// 	}
-	// 	// Use http read timeout if https read timeout wasn't defined
-	// 	if int64(s.TLSReadTimeout) == 0 {
-	// 		s.TLSReadTimeout = s.ReadTimeout
-	// 	}
-	// 	// Use http write timeout if https write timeout wasn't defined
-	// 	if int64(s.TLSWriteTimeout) == 0 {
-	// 		s.TLSWriteTimeout = s.WriteTimeout
-	// 	}
-	// }
-	//
-	// if s.hasScheme(schemeUnix) {
-	// 	domSockListener, err := net.Listen("unix", string(s.SocketPath))
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	s.domainSocketL = domSockListener
-	// }
+	if s.hasScheme(schemeHTTPS) {
+		// Use http host if https host wasn't defined
+		if s.TLSHost == "" {
+			s.TLSHost = s.Host
+		}
+		// Use http listen limit if https listen limit wasn't defined
+		if s.TLSListenLimit == 0 {
+			s.TLSListenLimit = s.ListenLimit
+		}
+		// Use http tcp keep alive if https tcp keep alive wasn't defined
+		if int64(s.TLSKeepAlive) == 0 {
+			s.TLSKeepAlive = s.KeepAlive
+		}
+		// Use http read timeout if https read timeout wasn't defined
+		if int64(s.TLSReadTimeout) == 0 {
+			s.TLSReadTimeout = s.ReadTimeout
+		}
+		// Use http write timeout if https write timeout wasn't defined
+		if int64(s.TLSWriteTimeout) == 0 {
+			s.TLSWriteTimeout = s.WriteTimeout
+		}
+	}
+
+	if s.hasScheme(schemeUnix) {
+		domSockListener, err := net.Listen("unix", string(s.SocketPath))
+		if err != nil {
+			return err
+		}
+		s.domainSocketL = domSockListener
+	}
 
 	if s.hasScheme(schemeHTTP) {
 		listener, err := net.Listen("tcp", net.JoinHostPort(s.Host, strconv.Itoa(s.Port)))
@@ -345,20 +350,20 @@ func (s *Server) Listen() error {
 		s.httpServerL = listener
 	}
 
-	// if s.hasScheme(schemeHTTPS) {
-	// 	tlsListener, err := net.Listen("tcp", net.JoinHostPort(s.TLSHost, strconv.Itoa(s.TLSPort)))
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	//
-	// 	sh, sp, err := swag.SplitHostPort(tlsListener.Addr().String())
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	s.TLSHost = sh
-	// 	s.TLSPort = sp
-	// 	s.httpsServerL = tlsListener
-	// }
+	if s.hasScheme(schemeHTTPS) {
+		tlsListener, err := net.Listen("tcp", net.JoinHostPort(s.TLSHost, strconv.Itoa(s.TLSPort)))
+		if err != nil {
+			return err
+		}
+
+		sh, sp, err := swag.SplitHostPort(tlsListener.Addr().String())
+		if err != nil {
+			return err
+		}
+		s.TLSHost = sh
+		s.TLSPort = sp
+		s.httpsServerL = tlsListener
+	}
 
 	s.hasListeners = true
 	return nil

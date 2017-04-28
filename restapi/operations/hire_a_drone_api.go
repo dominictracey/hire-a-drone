@@ -16,6 +16,8 @@ import (
 	spec "github.com/go-openapi/spec"
 	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+
+	"github.com/dominictracey/rugby-scores/models"
 )
 
 // NewHireADroneAPI creates a new HireADrone instance
@@ -30,19 +32,19 @@ func NewHireADroneAPI(spec *loads.Document) *HireADroneAPI {
 		ServeError:      errors.ServeError,
 		JSONConsumer:    runtime.JSONConsumer(),
 		JSONProducer:    runtime.JSONProducer(),
-		AuthInfoFirebaseHandler: AuthInfoFirebaseHandlerFunc(func(params AuthInfoFirebaseParams, principal interface{}) middleware.Responder {
+		AuthInfoFirebaseHandler: AuthInfoFirebaseHandlerFunc(func(params AuthInfoFirebaseParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation AuthInfoFirebase has not yet been implemented")
 		}),
-		EchoHandler: EchoHandlerFunc(func(params EchoParams, principal interface{}) middleware.Responder {
+		EchoHandler: EchoHandlerFunc(func(params EchoParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation Echo has not yet been implemented")
 		}),
 
-		FirebaseAuth: func(token string, scopes []string) (interface{}, error) {
+		FirebaseAuth: func(token string, scopes []string) (*models.Principal, error) {
 			return nil, errors.NotImplemented("oauth2 bearer auth (firebase) has not yet been implemented")
 		},
 
 		// Applies when the "key" query is set
-		APIKeyAuth: func(token string) (interface{}, error) {
+		APIKeyAuth: func(token string) (*models.Principal, error) {
 			return nil, errors.NotImplemented("api key auth (api_key) key from query param [key] has not yet been implemented")
 		},
 	}
@@ -65,11 +67,11 @@ type HireADroneAPI struct {
 
 	// FirebaseAuth registers a function that takes an access token and a collection of required scopes and returns a principal
 	// it performs authentication based on an oauth2 bearer token provided in the request
-	FirebaseAuth func(string, []string) (interface{}, error)
+	FirebaseAuth func(string, []string) (*models.Principal, error)
 
 	// APIKeyAuth registers a function that takes a token and returns a principal
 	// it performs authentication based on an api key key provided in the query
-	APIKeyAuth func(string) (interface{}, error)
+	APIKeyAuth func(string) (*models.Principal, error)
 
 	// AuthInfoFirebaseHandler sets the operation handler for the auth info firebase operation
 	AuthInfoFirebaseHandler AuthInfoFirebaseHandler
@@ -175,11 +177,15 @@ func (o *HireADroneAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme
 
 		case "firebase":
 
-			result[name] = security.BearerAuth(scheme.Name, o.FirebaseAuth)
+			result[name] = security.BearerAuth(scheme.Name, func(token string, scopes []string) (interface{}, error) {
+				return o.FirebaseAuth(token, scopes)
+			})
 
 		case "api_key":
-
-			result[name] = security.APIKeyAuth(scheme.Name, scheme.In, o.APIKeyAuth)
+			//o.Logger("-------------- HERE ----------------- ")
+			result[name] = security.APIKeyAuth(scheme.Name, scheme.In, func(token string) (interface{}, error) {
+				return o.APIKeyAuth(token)
+			})
 
 		}
 	}

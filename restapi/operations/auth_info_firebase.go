@@ -7,19 +7,21 @@ import (
 	"net/http"
 
 	middleware "github.com/go-openapi/runtime/middleware"
+
+	"github.com/dominictracey/rugby-scores/models"
 )
 
 // AuthInfoFirebaseHandlerFunc turns a function with the right signature into a auth info firebase handler
-type AuthInfoFirebaseHandlerFunc func(AuthInfoFirebaseParams, interface{}) middleware.Responder
+type AuthInfoFirebaseHandlerFunc func(AuthInfoFirebaseParams, *models.Principal) middleware.Responder
 
 // Handle executing the request and returning a response
-func (fn AuthInfoFirebaseHandlerFunc) Handle(params AuthInfoFirebaseParams, principal interface{}) middleware.Responder {
+func (fn AuthInfoFirebaseHandlerFunc) Handle(params AuthInfoFirebaseParams, principal *models.Principal) middleware.Responder {
 	return fn(params, principal)
 }
 
 // AuthInfoFirebaseHandler interface for that can handle valid auth info firebase params
 type AuthInfoFirebaseHandler interface {
-	Handle(AuthInfoFirebaseParams, interface{}) middleware.Responder
+	Handle(AuthInfoFirebaseParams, *models.Principal) middleware.Responder
 }
 
 // NewAuthInfoFirebase creates a new http.Handler for the auth info firebase operation
@@ -46,9 +48,9 @@ func (o *AuthInfoFirebase) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		o.Context.Respond(rw, r, route.Produces, route, err)
 		return
 	}
-	var principal interface{}
+	var principal *models.Principal
 	if uprinc != nil {
-		principal = uprinc
+		principal = uprinc.(*models.Principal) // this is really a models.Principal, I promise
 	}
 
 	if err := o.Context.BindValidRequest(r, route, &Params); err != nil { // bind params

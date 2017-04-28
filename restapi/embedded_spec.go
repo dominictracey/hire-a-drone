@@ -19,7 +19,7 @@ func init() {
     "application/json"
   ],
   "schemes": [
-    "https"
+    "http"
   ],
   "swagger": "2.0",
   "info": {
@@ -103,6 +103,9 @@ func init() {
           "type": "string"
         }
       }
+    },
+    "principal": {
+      "type": "string"
     }
   },
   "securityDefinitions": {
@@ -115,7 +118,7 @@ func init() {
       "type": "oauth2",
       "flow": "implicit",
       "authorizationUrl": "https://changemeplz.com",
-      "x-google-audiences": "YOUR-PROJECT-ID",
+      "x-google-audiences": "rugby-scores-7",
       "x-google-issuer": "https://securetoken.google.com/rugby-scores-7",
       "x-google-jwks_uri": "https://www.googleapis.com/service_accounts/v1/metadata/x509/securetoken@system.gserviceaccount.com"
     }
