@@ -4,7 +4,7 @@ info:
   description: "A simple Google Cloud Endpoints API example."
   title: "Endpoints Example"
   version: "1.0.0"
-host: "echo-api.endpoints.rugby-scores-7.cloud.goog"
+host: "scores-api.endpoints.rugby-scores-7.cloud.goog"
 # [END swagger]
 basePath: "/"
 consumes:
@@ -13,6 +13,8 @@ produces:
 - "application/json"
 schemes:
 - "http"
+security:
+- api_key: []
 paths:
   "/echo":
     post:
@@ -34,6 +36,86 @@ paths:
           $ref: "#/definitions/echoMessage"
       security:
       - api_key: []
+  /pilot:
+    get:
+      tags:
+        - pilot
+      operationId: findPilots
+      parameters:
+        - name: since
+          in: query
+          type: integer
+          format: int64
+        - name: limit
+          in: query
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        200:
+          description: list the pilots
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/pilot"
+        default:
+          description: generic error response
+          schema:
+            $ref: "#/definitions/error"
+    post:
+      tags:
+        - pilot
+      operationId: addOnePilot
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: "#/definitions/pilot"
+      responses:
+        201:
+          description: Created
+          schema:
+            $ref: "#/definitions/pilot"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+  /pilot/{id}:
+    parameters:
+      - type: integer
+        format: int64
+        name: id
+        in: path
+        required: true
+    put:
+      tags:
+        - pilot
+      operationId: updateOnePilot
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: "#/definitions/pilot"
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/pilot"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+    delete:
+      tags:
+        - pilot
+      operationId: destroyOnePilot
+      responses:
+        204:
+          description: Deleted
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
   "/auth/info/firebase":
     get:
       description: "Returns the requests' authentication information."
@@ -48,6 +130,23 @@ paths:
       security:
       - firebase: []
 definitions:
+  pilot:
+    type: object
+    required:
+      - lastName
+    properties:
+      id:
+        type: integer
+        format: int64
+        readOnly: true
+      firstName:
+        type: string
+        minLength: 1
+      lastName:
+        type: string
+        minLength: 1
+      licensed:
+        type: boolean
   echoMessage:
     properties:
       message:
@@ -60,6 +159,16 @@ definitions:
         type: "string"
   principal:
     type: string
+  error:
+    type: object
+    required:
+      - message
+    properties:
+      code:
+        type: integer
+        format: int64
+      message:
+        type: string
 # This section requires all requests to any path to require an API key.
 securityDefinitions:
   # This section configures basic authentication with an API key.

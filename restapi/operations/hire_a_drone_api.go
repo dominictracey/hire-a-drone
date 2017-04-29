@@ -18,6 +18,7 @@ import (
 	"github.com/go-openapi/swag"
 
 	"github.com/dominictracey/rugby-scores/models"
+	"github.com/dominictracey/rugby-scores/restapi/operations/pilot"
 )
 
 // NewHireADroneAPI creates a new HireADrone instance
@@ -32,11 +33,23 @@ func NewHireADroneAPI(spec *loads.Document) *HireADroneAPI {
 		ServeError:      errors.ServeError,
 		JSONConsumer:    runtime.JSONConsumer(),
 		JSONProducer:    runtime.JSONProducer(),
+		PilotAddOnePilotHandler: pilot.AddOnePilotHandlerFunc(func(params pilot.AddOnePilotParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation PilotAddOnePilot has not yet been implemented")
+		}),
 		AuthInfoFirebaseHandler: AuthInfoFirebaseHandlerFunc(func(params AuthInfoFirebaseParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation AuthInfoFirebase has not yet been implemented")
 		}),
+		PilotDestroyOnePilotHandler: pilot.DestroyOnePilotHandlerFunc(func(params pilot.DestroyOnePilotParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation PilotDestroyOnePilot has not yet been implemented")
+		}),
 		EchoHandler: EchoHandlerFunc(func(params EchoParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation Echo has not yet been implemented")
+		}),
+		PilotFindPilotsHandler: pilot.FindPilotsHandlerFunc(func(params pilot.FindPilotsParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation PilotFindPilots has not yet been implemented")
+		}),
+		PilotUpdateOnePilotHandler: pilot.UpdateOnePilotHandlerFunc(func(params pilot.UpdateOnePilotParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation PilotUpdateOnePilot has not yet been implemented")
 		}),
 
 		FirebaseAuth: func(token string, scopes []string) (*models.Principal, error) {
@@ -73,10 +86,18 @@ type HireADroneAPI struct {
 	// it performs authentication based on an api key key provided in the query
 	APIKeyAuth func(string) (*models.Principal, error)
 
+	// PilotAddOnePilotHandler sets the operation handler for the add one pilot operation
+	PilotAddOnePilotHandler pilot.AddOnePilotHandler
 	// AuthInfoFirebaseHandler sets the operation handler for the auth info firebase operation
 	AuthInfoFirebaseHandler AuthInfoFirebaseHandler
+	// PilotDestroyOnePilotHandler sets the operation handler for the destroy one pilot operation
+	PilotDestroyOnePilotHandler pilot.DestroyOnePilotHandler
 	// EchoHandler sets the operation handler for the echo operation
 	EchoHandler EchoHandler
+	// PilotFindPilotsHandler sets the operation handler for the find pilots operation
+	PilotFindPilotsHandler pilot.FindPilotsHandler
+	// PilotUpdateOnePilotHandler sets the operation handler for the update one pilot operation
+	PilotUpdateOnePilotHandler pilot.UpdateOnePilotHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -148,12 +169,28 @@ func (o *HireADroneAPI) Validate() error {
 		unregistered = append(unregistered, "KeyAuth")
 	}
 
+	if o.PilotAddOnePilotHandler == nil {
+		unregistered = append(unregistered, "pilot.AddOnePilotHandler")
+	}
+
 	if o.AuthInfoFirebaseHandler == nil {
 		unregistered = append(unregistered, "AuthInfoFirebaseHandler")
 	}
 
+	if o.PilotDestroyOnePilotHandler == nil {
+		unregistered = append(unregistered, "pilot.DestroyOnePilotHandler")
+	}
+
 	if o.EchoHandler == nil {
 		unregistered = append(unregistered, "EchoHandler")
+	}
+
+	if o.PilotFindPilotsHandler == nil {
+		unregistered = append(unregistered, "pilot.FindPilotsHandler")
+	}
+
+	if o.PilotUpdateOnePilotHandler == nil {
+		unregistered = append(unregistered, "pilot.UpdateOnePilotHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -182,7 +219,7 @@ func (o *HireADroneAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme
 			})
 
 		case "api_key":
-			//o.Logger("-------------- HERE ----------------- ")
+
 			result[name] = security.APIKeyAuth(scheme.Name, scheme.In, func(token string) (interface{}, error) {
 				return o.APIKeyAuth(token)
 			})
@@ -254,15 +291,35 @@ func (o *HireADroneAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
+	o.handlers["POST"]["/pilot"] = pilot.NewAddOnePilot(o.context, o.PilotAddOnePilotHandler)
+
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/auth/info/firebase"] = NewAuthInfoFirebase(o.context, o.AuthInfoFirebaseHandler)
 
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/pilot/{id}"] = pilot.NewDestroyOnePilot(o.context, o.PilotDestroyOnePilotHandler)
+
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/echo"] = NewEcho(o.context, o.EchoHandler)
+
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/pilot"] = pilot.NewFindPilots(o.context, o.PilotFindPilotsHandler)
+
+	if o.handlers["PUT"] == nil {
+		o.handlers["PUT"] = make(map[string]http.Handler)
+	}
+	o.handlers["PUT"]["/pilot/{id}"] = pilot.NewUpdateOnePilot(o.context, o.PilotUpdateOnePilotHandler)
 
 }
 

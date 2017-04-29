@@ -27,7 +27,7 @@ func init() {
     "title": "Endpoints Example",
     "version": "1.0.0"
   },
-  "host": "echo-api.endpoints.rugby-scores-7.cloud.goog",
+  "host": "scores-api.endpoints.rugby-scores-7.cloud.goog",
   "basePath": "/",
   "paths": {
     "/auth/info/firebase": {
@@ -84,6 +84,132 @@ func init() {
           }
         }
       }
+    },
+    "/pilot": {
+      "get": {
+        "tags": [
+          "pilot"
+        ],
+        "operationId": "findPilots",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "name": "since",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int32",
+            "default": 20,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "list the pilots",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/pilot"
+              }
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "pilot"
+        ],
+        "operationId": "addOnePilot",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/pilot"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/pilot"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/pilot/{id}": {
+      "put": {
+        "tags": [
+          "pilot"
+        ],
+        "operationId": "updateOnePilot",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/pilot"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/pilot"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "pilot"
+        ],
+        "operationId": "destroyOnePilot",
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "type": "integer",
+          "format": "int64",
+          "name": "id",
+          "in": "path",
+          "required": true
+        }
+      ]
     }
   },
   "definitions": {
@@ -101,6 +227,45 @@ func init() {
       "properties": {
         "message": {
           "type": "string"
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "required": [
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "pilot": {
+      "type": "object",
+      "required": [
+        "lastName"
+      ],
+      "properties": {
+        "firstName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "readOnly": true
+        },
+        "lastName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "licensed": {
+          "type": "boolean"
         }
       }
     },
@@ -122,6 +287,11 @@ func init() {
       "x-google-issuer": "https://securetoken.google.com/rugby-scores-7",
       "x-google-jwks_uri": "https://www.googleapis.com/service_accounts/v1/metadata/x509/securetoken@system.gserviceaccount.com"
     }
-  }
+  },
+  "security": [
+    {
+      "api_key": []
+    }
+  ]
 }`))
 }
