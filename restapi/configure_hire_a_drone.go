@@ -1,11 +1,15 @@
 package restapi
 
 import (
+	"context"
 	"crypto/tls"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
 	"sync/atomic"
+
+	"cloud.google.com/go/logging"
 
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
@@ -101,7 +105,39 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 	// Expected interface func(string, ...interface{})
 	//
 	// Example:
-	api.Logger = log.Printf
+	api.Logger = func(text string, args ...interface{}) {
+		ctx := context.Background()
+
+		// Sets your Google Cloud Platform project ID.
+		projectID := "rugby-scores-7"
+
+		// Creates a client.
+		client, err := logging.NewClient(ctx, projectID)
+		if err != nil {
+			log.Fatalf("Failed to create client: %v", err)
+		}
+
+		// Sets the name of the log to write to.
+		logName := "debug-app-log"
+
+		// Selects the log to write to.
+		logger := client.Logger(logName)
+
+		// Sets the data to log.
+		textL := fmt.Sprintf(text, args)
+
+		// Adds an entry to the log buffer.
+		logger.Log(logging.Entry{Payload: textL})
+
+		// Closes the client and flushes the buffer to the Stackdriver Logging
+		// service.
+		if err := client.Close(); err != nil {
+			log.Fatalf("Failed to close client: %v", err)
+		}
+
+		//fmt.Printf("Logged: %v\n", text)
+
+	}
 
 	api.Logger("Logger started for api")
 
@@ -144,6 +180,7 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 		if err := addPilot(params.Body); err != nil {
 			return pilot.NewAddOnePilotDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
+		api.Logger("Pilot added: %s %s", params.Body.FirstName, params.Body.LastName)
 		return pilot.NewAddOnePilotCreated().WithPayload(params.Body)
 	})
 	api.PilotDestroyOnePilotHandler = pilot.DestroyOnePilotHandlerFunc(func(params pilot.DestroyOnePilotParams, principal *models.Principal) middleware.Responder {
@@ -161,6 +198,7 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 		if params.Limit != nil {
 			mergedParams.Limit = params.Limit
 		}
+
 		return pilot.NewFindPilotsOK().WithPayload(allPilots(*mergedParams.Since, *mergedParams.Limit))
 	})
 	api.PilotUpdateOnePilotHandler = pilot.UpdateOnePilotHandlerFunc(func(params pilot.UpdateOnePilotParams, principal *models.Principal) middleware.Responder {
