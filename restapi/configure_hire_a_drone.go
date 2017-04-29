@@ -118,7 +118,7 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 		}
 
 		// Sets the name of the log to write to.
-		logName := "debug-app-log"
+		logName := "1.scores_api_endpoints_rugby_scores_7_cloud_goog.Pilot"
 
 		// Selects the log to write to.
 		logger := client.Logger(logName)
@@ -127,7 +127,7 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 		textL := fmt.Sprintf(text, args...)
 
 		// Adds an entry to the log buffer.
-		logger.Log(logging.Entry{Payload: textL})
+		logger.Log(logging.Entry{Payload: textL, Severity: logging.Critical})
 
 		// Closes the client and flushes the buffer to the Stackdriver Logging
 		// service.
