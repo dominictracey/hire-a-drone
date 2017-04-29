@@ -124,7 +124,7 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 		logger := client.Logger(logName)
 
 		// Sets the data to log.
-		textL := fmt.Sprintf(text, args)
+		textL := fmt.Sprintf(text, args...)
 
 		// Adds an entry to the log buffer.
 		logger.Log(logging.Entry{Payload: textL})
@@ -135,7 +135,7 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 			log.Fatalf("Failed to close client: %v", err)
 		}
 
-		//fmt.Printf("Logged: %v\n", text)
+		fmt.Printf("Logged: %v\n", textL)
 
 	}
 
@@ -180,7 +180,7 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 		if err := addPilot(params.Body); err != nil {
 			return pilot.NewAddOnePilotDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
-		api.Logger("Pilot added: %s %s", params.Body.FirstName, params.Body.LastName)
+		api.Logger("Pilot added: %s %s %v %t", params.Body.FirstName, *params.Body.LastName, params.Body.ID, params.Body.Licensed)
 		return pilot.NewAddOnePilotCreated().WithPayload(params.Body)
 	})
 	api.PilotDestroyOnePilotHandler = pilot.DestroyOnePilotHandlerFunc(func(params pilot.DestroyOnePilotParams, principal *models.Principal) middleware.Responder {
