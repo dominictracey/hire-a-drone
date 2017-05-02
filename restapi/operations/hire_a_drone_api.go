@@ -17,7 +17,8 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 
-	"github.com/dominictracey/rugby-scores/restapi/operations/pilots"
+	"github.com/dominictracey/rugby-scores/models"
+	"github.com/dominictracey/rugby-scores/restapi/operations/pilot"
 )
 
 // NewHireADroneAPI creates a new HireADrone instance
@@ -32,58 +33,37 @@ func NewHireADroneAPI(spec *loads.Document) *HireADroneAPI {
 		ServeError:      errors.ServeError,
 		JSONConsumer:    runtime.JSONConsumer(),
 		JSONProducer:    runtime.JSONProducer(),
-		PilotsAddOneHandler: pilots.AddOneHandlerFunc(func(params pilots.AddOneParams) middleware.Responder {
-			return middleware.NotImplemented("operation PilotsAddOne has not yet been implemented")
+		PilotAddOnePilotHandler: pilot.AddOnePilotHandlerFunc(func(params pilot.AddOnePilotParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation PilotAddOnePilot has not yet been implemented")
 		}),
-		AuthInfoFirebaseHandler: AuthInfoFirebaseHandlerFunc(func(params AuthInfoFirebaseParams, principal interface{}) middleware.Responder {
+		AuthInfoFirebaseHandler: AuthInfoFirebaseHandlerFunc(func(params AuthInfoFirebaseParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation AuthInfoFirebase has not yet been implemented")
 		}),
-		AuthInfoGoogleIDTokenHandler: AuthInfoGoogleIDTokenHandlerFunc(func(params AuthInfoGoogleIDTokenParams, principal interface{}) middleware.Responder {
-			return middleware.NotImplemented("operation AuthInfoGoogleIDToken has not yet been implemented")
+		PilotDestroyOnePilotHandler: pilot.DestroyOnePilotHandlerFunc(func(params pilot.DestroyOnePilotParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation PilotDestroyOnePilot has not yet been implemented")
 		}),
-		AuthInfoAuth0JwkHandler: AuthInfoAuth0JwkHandlerFunc(func(params AuthInfoAuth0JwkParams, principal interface{}) middleware.Responder {
-			return middleware.NotImplemented("operation AuthInfoAuth0Jwk has not yet been implemented")
-		}),
-		AuthInfoGoogleJwtHandler: AuthInfoGoogleJwtHandlerFunc(func(params AuthInfoGoogleJwtParams, principal interface{}) middleware.Responder {
-			return middleware.NotImplemented("operation AuthInfoGoogleJwt has not yet been implemented")
-		}),
-		PilotsDestroyOneHandler: pilots.DestroyOneHandlerFunc(func(params pilots.DestroyOneParams) middleware.Responder {
-			return middleware.NotImplemented("operation PilotsDestroyOne has not yet been implemented")
-		}),
-		EchoHandler: EchoHandlerFunc(func(params EchoParams, principal interface{}) middleware.Responder {
+		EchoHandler: EchoHandlerFunc(func(params EchoParams, principal *models.Principal) middleware.Responder {
 			return middleware.NotImplemented("operation Echo has not yet been implemented")
 		}),
-		PilotsFindPilotsHandler: pilots.FindPilotsHandlerFunc(func(params pilots.FindPilotsParams) middleware.Responder {
-			return middleware.NotImplemented("operation PilotsFindPilots has not yet been implemented")
+		PilotFindPilotsHandler: pilot.FindPilotsHandlerFunc(func(params pilot.FindPilotsParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation PilotFindPilots has not yet been implemented")
 		}),
-		PilotsUpdateOneHandler: pilots.UpdateOneHandlerFunc(func(params pilots.UpdateOneParams) middleware.Responder {
-			return middleware.NotImplemented("operation PilotsUpdateOne has not yet been implemented")
+		PilotUpdateOnePilotHandler: pilot.UpdateOnePilotHandlerFunc(func(params pilot.UpdateOnePilotParams, principal *models.Principal) middleware.Responder {
+			return middleware.NotImplemented("operation PilotUpdateOnePilot has not yet been implemented")
 		}),
 
-		GoogleIDTokenAuth: func(token string, scopes []string) (interface{}, error) {
-			return nil, errors.NotImplemented("oauth2 bearer auth (google_id_token) has not yet been implemented")
-		},
-
-		FirebaseAuth: func(token string, scopes []string) (interface{}, error) {
+		FirebaseAuth: func(token string, scopes []string) (*models.Principal, error) {
 			return nil, errors.NotImplemented("oauth2 bearer auth (firebase) has not yet been implemented")
 		},
 
-		GoogleJwtAuth: func(token string, scopes []string) (interface{}, error) {
-			return nil, errors.NotImplemented("oauth2 bearer auth (google_jwt) has not yet been implemented")
-		},
-
-		Auth0JwkAuth: func(token string, scopes []string) (interface{}, error) {
-			return nil, errors.NotImplemented("oauth2 bearer auth (auth0_jwk) has not yet been implemented")
-		},
-
 		// Applies when the "key" query is set
-		APIKeyAuth: func(token string) (interface{}, error) {
+		APIKeyAuth: func(token string) (*models.Principal, error) {
 			return nil, errors.NotImplemented("api key auth (api_key) key from query param [key] has not yet been implemented")
 		},
 	}
 }
 
-/*HireADroneAPI Submit and view scores */
+/*HireADroneAPI A simple Google Cloud Endpoints API example. */
 type HireADroneAPI struct {
 	spec            *loads.Document
 	context         *middleware.Context
@@ -98,44 +78,26 @@ type HireADroneAPI struct {
 	// JSONProducer registers a producer for a "application/json" mime type
 	JSONProducer runtime.Producer
 
-	// GoogleIDTokenAuth registers a function that takes an access token and a collection of required scopes and returns a principal
-	// it performs authentication based on an oauth2 bearer token provided in the request
-	GoogleIDTokenAuth func(string, []string) (interface{}, error)
-
 	// FirebaseAuth registers a function that takes an access token and a collection of required scopes and returns a principal
 	// it performs authentication based on an oauth2 bearer token provided in the request
-	FirebaseAuth func(string, []string) (interface{}, error)
-
-	// GoogleJwtAuth registers a function that takes an access token and a collection of required scopes and returns a principal
-	// it performs authentication based on an oauth2 bearer token provided in the request
-	GoogleJwtAuth func(string, []string) (interface{}, error)
-
-	// Auth0JwkAuth registers a function that takes an access token and a collection of required scopes and returns a principal
-	// it performs authentication based on an oauth2 bearer token provided in the request
-	Auth0JwkAuth func(string, []string) (interface{}, error)
+	FirebaseAuth func(string, []string) (*models.Principal, error)
 
 	// APIKeyAuth registers a function that takes a token and returns a principal
 	// it performs authentication based on an api key key provided in the query
-	APIKeyAuth func(string) (interface{}, error)
+	APIKeyAuth func(string) (*models.Principal, error)
 
-	// PilotsAddOneHandler sets the operation handler for the add one operation
-	PilotsAddOneHandler pilots.AddOneHandler
+	// PilotAddOnePilotHandler sets the operation handler for the add one pilot operation
+	PilotAddOnePilotHandler pilot.AddOnePilotHandler
 	// AuthInfoFirebaseHandler sets the operation handler for the auth info firebase operation
 	AuthInfoFirebaseHandler AuthInfoFirebaseHandler
-	// AuthInfoGoogleIDTokenHandler sets the operation handler for the auth info google Id token operation
-	AuthInfoGoogleIDTokenHandler AuthInfoGoogleIDTokenHandler
-	// AuthInfoAuth0JwkHandler sets the operation handler for the auth info auth0 jwk operation
-	AuthInfoAuth0JwkHandler AuthInfoAuth0JwkHandler
-	// AuthInfoGoogleJwtHandler sets the operation handler for the auth info google jwt operation
-	AuthInfoGoogleJwtHandler AuthInfoGoogleJwtHandler
-	// PilotsDestroyOneHandler sets the operation handler for the destroy one operation
-	PilotsDestroyOneHandler pilots.DestroyOneHandler
+	// PilotDestroyOnePilotHandler sets the operation handler for the destroy one pilot operation
+	PilotDestroyOnePilotHandler pilot.DestroyOnePilotHandler
 	// EchoHandler sets the operation handler for the echo operation
 	EchoHandler EchoHandler
-	// PilotsFindPilotsHandler sets the operation handler for the find pilots operation
-	PilotsFindPilotsHandler pilots.FindPilotsHandler
-	// PilotsUpdateOneHandler sets the operation handler for the update one operation
-	PilotsUpdateOneHandler pilots.UpdateOneHandler
+	// PilotFindPilotsHandler sets the operation handler for the find pilots operation
+	PilotFindPilotsHandler pilot.FindPilotsHandler
+	// PilotUpdateOnePilotHandler sets the operation handler for the update one pilot operation
+	PilotUpdateOnePilotHandler pilot.UpdateOnePilotHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -199,60 +161,36 @@ func (o *HireADroneAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
-	if o.GoogleIDTokenAuth == nil {
-		unregistered = append(unregistered, "GoogleIDTokenAuth")
-	}
-
 	if o.FirebaseAuth == nil {
 		unregistered = append(unregistered, "FirebaseAuth")
-	}
-
-	if o.GoogleJwtAuth == nil {
-		unregistered = append(unregistered, "GoogleJwtAuth")
-	}
-
-	if o.Auth0JwkAuth == nil {
-		unregistered = append(unregistered, "Auth0JwkAuth")
 	}
 
 	if o.APIKeyAuth == nil {
 		unregistered = append(unregistered, "KeyAuth")
 	}
 
-	if o.PilotsAddOneHandler == nil {
-		unregistered = append(unregistered, "pilots.AddOneHandler")
+	if o.PilotAddOnePilotHandler == nil {
+		unregistered = append(unregistered, "pilot.AddOnePilotHandler")
 	}
 
 	if o.AuthInfoFirebaseHandler == nil {
 		unregistered = append(unregistered, "AuthInfoFirebaseHandler")
 	}
 
-	if o.AuthInfoGoogleIDTokenHandler == nil {
-		unregistered = append(unregistered, "AuthInfoGoogleIDTokenHandler")
-	}
-
-	if o.AuthInfoAuth0JwkHandler == nil {
-		unregistered = append(unregistered, "AuthInfoAuth0JwkHandler")
-	}
-
-	if o.AuthInfoGoogleJwtHandler == nil {
-		unregistered = append(unregistered, "AuthInfoGoogleJwtHandler")
-	}
-
-	if o.PilotsDestroyOneHandler == nil {
-		unregistered = append(unregistered, "pilots.DestroyOneHandler")
+	if o.PilotDestroyOnePilotHandler == nil {
+		unregistered = append(unregistered, "pilot.DestroyOnePilotHandler")
 	}
 
 	if o.EchoHandler == nil {
 		unregistered = append(unregistered, "EchoHandler")
 	}
 
-	if o.PilotsFindPilotsHandler == nil {
-		unregistered = append(unregistered, "pilots.FindPilotsHandler")
+	if o.PilotFindPilotsHandler == nil {
+		unregistered = append(unregistered, "pilot.FindPilotsHandler")
 	}
 
-	if o.PilotsUpdateOneHandler == nil {
-		unregistered = append(unregistered, "pilots.UpdateOneHandler")
+	if o.PilotUpdateOnePilotHandler == nil {
+		unregistered = append(unregistered, "pilot.UpdateOnePilotHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -274,25 +212,17 @@ func (o *HireADroneAPI) AuthenticatorsFor(schemes map[string]spec.SecurityScheme
 	for name, scheme := range schemes {
 		switch name {
 
-		case "google_id_token":
-
-			result[name] = security.BearerAuth(scheme.Name, o.GoogleIDTokenAuth)
-
 		case "firebase":
 
-			result[name] = security.BearerAuth(scheme.Name, o.FirebaseAuth)
-
-		case "google_jwt":
-
-			result[name] = security.BearerAuth(scheme.Name, o.GoogleJwtAuth)
-
-		case "auth0_jwk":
-
-			result[name] = security.BearerAuth(scheme.Name, o.Auth0JwkAuth)
+			result[name] = security.BearerAuth(scheme.Name, func(token string, scopes []string) (interface{}, error) {
+				return o.FirebaseAuth(token, scopes)
+			})
 
 		case "api_key":
 
-			result[name] = security.APIKeyAuth(scheme.Name, scheme.In, o.APIKeyAuth)
+			result[name] = security.APIKeyAuth(scheme.Name, scheme.In, func(token string) (interface{}, error) {
+				return o.APIKeyAuth(token)
+			})
 
 		}
 	}
@@ -341,9 +271,6 @@ func (o *HireADroneAPI) HandlerFor(method, path string) (http.Handler, bool) {
 	if _, ok := o.handlers[um]; !ok {
 		return nil, false
 	}
-	if path == "/" {
-		path = ""
-	}
 	h, ok := o.handlers[um][path]
 	return h, ok
 }
@@ -367,32 +294,17 @@ func (o *HireADroneAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"][""] = pilots.NewAddOne(o.context, o.PilotsAddOneHandler)
+	o.handlers["POST"]["/pilot"] = pilot.NewAddOnePilot(o.context, o.PilotAddOnePilotHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
 	o.handlers["GET"]["/auth/info/firebase"] = NewAuthInfoFirebase(o.context, o.AuthInfoFirebaseHandler)
 
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/auth/info/googleidtoken"] = NewAuthInfoGoogleIDToken(o.context, o.AuthInfoGoogleIDTokenHandler)
-
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/auth/info/auth0"] = NewAuthInfoAuth0Jwk(o.context, o.AuthInfoAuth0JwkHandler)
-
-	if o.handlers["GET"] == nil {
-		o.handlers["GET"] = make(map[string]http.Handler)
-	}
-	o.handlers["GET"]["/auth/info/googlejwt"] = NewAuthInfoGoogleJwt(o.context, o.AuthInfoGoogleJwtHandler)
-
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
 	}
-	o.handlers["DELETE"]["/{id}"] = pilots.NewDestroyOne(o.context, o.PilotsDestroyOneHandler)
+	o.handlers["DELETE"]["/pilot/{id}"] = pilot.NewDestroyOnePilot(o.context, o.PilotDestroyOnePilotHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
@@ -402,12 +314,12 @@ func (o *HireADroneAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"][""] = pilots.NewFindPilots(o.context, o.PilotsFindPilotsHandler)
+	o.handlers["GET"]["/pilot"] = pilot.NewFindPilots(o.context, o.PilotFindPilotsHandler)
 
 	if o.handlers["PUT"] == nil {
 		o.handlers["PUT"] = make(map[string]http.Handler)
 	}
-	o.handlers["PUT"]["/{id}"] = pilots.NewUpdateOne(o.context, o.PilotsUpdateOneHandler)
+	o.handlers["PUT"]["/pilot/{id}"] = pilot.NewUpdateOnePilot(o.context, o.PilotUpdateOnePilotHandler)
 
 }
 

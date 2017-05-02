@@ -1,0 +1,1 @@
+docker run --rm -it -v $PWD:/go/src/github.com/dominictracey/rugby-scores -w /go/src/github.com/dominictracey/rugby-scores -e "GOPATH=/go/src/github.com/dominictracey/rugby-scores/vendor:/go" golang go build -o hire-a-drone

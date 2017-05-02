@@ -32,14 +32,13 @@ var defaultSchemes []string
 func init() {
 	defaultSchemes = []string{
 		schemeHTTP,
-		schemeHTTPS,
 	}
 }
 
 // NewServer creates a new api hire a drone server but does not configure it
 func NewServer(api *operations.HireADroneAPI) *Server {
 	s := new(Server)
-
+	s.Port = 8080
 	s.api = api
 	return s
 }

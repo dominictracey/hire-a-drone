@@ -26,8 +26,8 @@ func main() {
 	defer server.Shutdown()
 
 	parser := flags.NewParser(server, flags.Default)
-	parser.ShortDescription = "Rugby Scores API"
-	parser.LongDescription = "Submit and view scores"
+	parser.ShortDescription = "Endpoints Example"
+	parser.LongDescription = "A simple Google Cloud Endpoints API example."
 
 	server.ConfigureFlags()
 	for _, optsGroup := range api.CommandLineOptionsGroups {

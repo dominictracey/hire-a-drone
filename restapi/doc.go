@@ -1,11 +1,10 @@
-/*Package restapi Rugby Scores API
+/*Package restapi Endpoints Example
 
-Submit and view scores
+A simple Google Cloud Endpoints API example.
 
 
     Schemes:
       http
-      https
     Host: scores-api.endpoints.rugby-scores-7.cloud.goog
     BasePath: /
     Version: 1.0.0

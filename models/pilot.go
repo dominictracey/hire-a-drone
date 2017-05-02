@@ -15,41 +15,32 @@ import (
 // swagger:model pilot
 type Pilot struct {
 
-	// address
+	// first name
 	// Min Length: 1
-	Address string `json:"Address,omitempty"`
+	FirstName string `json:"firstName,omitempty"`
 
-	// ID
+	// id
 	// Read Only: true
-	ID int64 `json:"ID,omitempty"`
+	ID int64 `json:"id,omitempty"`
+
+	// last name
+	// Min Length: 1
+	LastName string `json:"lastName,omitempty"`
 
 	// licensed
-	Licensed bool `json:"Licensed,omitempty"`
-
-	// name
-	// Min Length: 1
-	Name string `json:"Name,omitempty"`
-
-	// phone
-	// Min Length: 1
-	Phone string `json:"Phone,omitempty"`
+	Licensed bool `json:"licensed,omitempty"`
 }
 
 // Validate validates this pilot
 func (m *Pilot) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateAddress(formats); err != nil {
+	if err := m.validateFirstName(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
 
-	if err := m.validateName(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if err := m.validatePhone(formats); err != nil {
+	if err := m.validateLastName(formats); err != nil {
 		// prop
 		res = append(res, err)
 	}
@@ -60,39 +51,26 @@ func (m *Pilot) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Pilot) validateAddress(formats strfmt.Registry) error {
+func (m *Pilot) validateFirstName(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.Address) { // not required
+	if swag.IsZero(m.FirstName) { // not required
 		return nil
 	}
 
-	if err := validate.MinLength("Address", "body", string(m.Address), 1); err != nil {
+	if err := validate.MinLength("firstName", "body", string(m.FirstName), 1); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (m *Pilot) validateName(formats strfmt.Registry) error {
+func (m *Pilot) validateLastName(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.Name) { // not required
+	if swag.IsZero(m.LastName) { // not required
 		return nil
 	}
 
-	if err := validate.MinLength("Name", "body", string(m.Name), 1); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *Pilot) validatePhone(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Phone) { // not required
-		return nil
-	}
-
-	if err := validate.MinLength("Phone", "body", string(m.Phone), 1); err != nil {
+	if err := validate.MinLength("lastName", "body", string(m.LastName), 1); err != nil {
 		return err
 	}
 

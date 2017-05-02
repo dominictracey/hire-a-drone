@@ -19,109 +19,17 @@ func init() {
     "application/json"
   ],
   "schemes": [
-    "http",
-    "https"
+    "http"
   ],
   "swagger": "2.0",
   "info": {
-    "description": "Submit and view scores",
-    "title": "Rugby Scores API",
+    "description": "A simple Google Cloud Endpoints API example.",
+    "title": "Endpoints Example",
     "version": "1.0.0"
   },
   "host": "scores-api.endpoints.rugby-scores-7.cloud.goog",
   "basePath": "/",
   "paths": {
-    "/": {
-      "get": {
-        "tags": [
-          "Pilots"
-        ],
-        "operationId": "findPilots",
-        "parameters": [
-          {
-            "type": "integer",
-            "format": "int64",
-            "name": "since",
-            "in": "query"
-          },
-          {
-            "type": "integer",
-            "format": "int32",
-            "default": 20,
-            "name": "limit",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "list the Pilot operations",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/pilot"
-              }
-            }
-          },
-          "default": {
-            "description": "generic error response",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Pilots"
-        ],
-        "operationId": "addOne",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "$ref": "#/definitions/pilot"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Created",
-            "schema": {
-              "$ref": "#/definitions/pilot"
-            }
-          },
-          "default": {
-            "description": "error",
-            "schema": {
-              "$ref": "#/definitions/error"
-            }
-          }
-        }
-      }
-    },
-    "/auth/info/auth0": {
-      "get": {
-        "description": "Returns the requests' authentication information.",
-        "produces": [
-          "application/json"
-        ],
-        "operationId": "auth_info_auth0_jwk",
-        "security": [
-          {
-            "auth0_jwk": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Authentication info.",
-            "schema": {
-              "$ref": "#/definitions/authInfoResponse"
-            }
-          }
-        }
-      }
-    },
     "/auth/info/firebase": {
       "get": {
         "description": "Returns the requests' authentication information.",
@@ -132,50 +40,6 @@ func init() {
         "security": [
           {
             "firebase": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Authentication info.",
-            "schema": {
-              "$ref": "#/definitions/authInfoResponse"
-            }
-          }
-        }
-      }
-    },
-    "/auth/info/googleidtoken": {
-      "get": {
-        "description": "Returns the requests' authentication information.",
-        "produces": [
-          "application/json"
-        ],
-        "operationId": "authInfoGoogleIdToken",
-        "security": [
-          {
-            "google_id_token": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Authentication info.",
-            "schema": {
-              "$ref": "#/definitions/authInfoResponse"
-            }
-          }
-        }
-      }
-    },
-    "/auth/info/googlejwt": {
-      "get": {
-        "description": "Returns the requests' authentication information.",
-        "produces": [
-          "application/json"
-        ],
-        "operationId": "auth_info_google_jwt",
-        "security": [
-          {
-            "google_jwt": []
           }
         ],
         "responses": {
@@ -221,12 +85,81 @@ func init() {
         }
       }
     },
-    "/{id}": {
+    "/pilot": {
+      "get": {
+        "tags": [
+          "pilot"
+        ],
+        "operationId": "findPilots",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "name": "since",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int32",
+            "default": 20,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "list the pilots",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/pilot"
+              }
+            }
+          },
+          "default": {
+            "description": "generic error response",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "pilot"
+        ],
+        "operationId": "addOnePilot",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/pilot"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/pilot"
+            }
+          },
+          "default": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/error"
+            }
+          }
+        }
+      }
+    },
+    "/pilot/{id}": {
       "put": {
         "tags": [
-          "Pilots"
+          "pilot"
         ],
-        "operationId": "updateOne",
+        "operationId": "updateOnePilot",
         "parameters": [
           {
             "name": "body",
@@ -253,9 +186,9 @@ func init() {
       },
       "delete": {
         "tags": [
-          "Pilots"
+          "pilot"
         ],
-        "operationId": "destroyOne",
+        "operationId": "destroyOnePilot",
         "responses": {
           "204": {
             "description": "Deleted"
@@ -315,27 +248,26 @@ func init() {
     "pilot": {
       "type": "object",
       "properties": {
-        "Address": {
+        "firstName": {
           "type": "string",
           "minLength": 1
         },
-        "ID": {
+        "id": {
           "type": "integer",
           "format": "int64",
           "readOnly": true
         },
-        "Licensed": {
+        "lastName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "licensed": {
           "type": "boolean"
-        },
-        "Name": {
-          "type": "string",
-          "minLength": 1
-        },
-        "Phone": {
-          "type": "string",
-          "minLength": 1
         }
       }
+    },
+    "principal": {
+      "type": "string"
     }
   },
   "securityDefinitions": {
@@ -344,38 +276,19 @@ func init() {
       "name": "key",
       "in": "query"
     },
-    "auth0_jwk": {
-      "type": "oauth2",
-      "flow": "implicit",
-      "authorizationUrl": "https://YOUR-ACCOUNT-NAME.auth0.com/authorize",
-      "x-google-audiences": "YOUR-CLIENT-ID",
-      "x-google-issuer": "https://YOUR-ACCOUNT-NAME.auth0.com/",
-      "x-google-jwks_uri": "https://YOUR-ACCOUNT-NAME.auth0.com/.well-known/jwks.json"
-    },
     "firebase": {
       "type": "oauth2",
       "flow": "implicit",
-      "authorizationUrl": "https://foo.bar/",
-      "x-google-audiences": "YOUR-PROJECT-ID",
-      "x-google-issuer": "https://securetoken.google.com/YOUR-PROJECT-ID",
+      "authorizationUrl": "https://changemeplz.com",
+      "x-google-audiences": "rugby-scores-7",
+      "x-google-issuer": "https://securetoken.google.com/rugby-scores-7",
       "x-google-jwks_uri": "https://www.googleapis.com/service_accounts/v1/metadata/x509/securetoken@system.gserviceaccount.com"
-    },
-    "google_id_token": {
-      "type": "oauth2",
-      "flow": "implicit",
-      "authorizationUrl": "https://foo.bar/",
-      "x-google-audiences": "YOUR-CLIENT-ID",
-      "x-google-issuer": "https://accounts.google.com",
-      "x-google-jwks_uri": "https://www.googleapis.com/oauth2/v3/certs"
-    },
-    "google_jwt": {
-      "type": "oauth2",
-      "flow": "implicit",
-      "authorizationUrl": "https://foo.bar/",
-      "x-google-audiences": "echo.endpoints.sample.google.com",
-      "x-google-issuer": "jwt-client.endpoints.sample.google.com",
-      "x-google-jwks_uri": "https://www.googleapis.com/service_accounts/v1/jwk/YOUR-SERVICE-ACCOUNT-EMAIL"
     }
-  }
+  },
+  "security": [
+    {
+      "api_key": []
+    }
+  ]
 }`))
 }

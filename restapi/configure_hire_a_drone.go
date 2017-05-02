@@ -1,11 +1,13 @@
 package restapi
 
 import (
+	"context"
 	"crypto/tls"
+	"fmt"
 	"log"
 	"net/http"
-	"sync"
-	"sync/atomic"
+
+	"cloud.google.com/go/logging"
 
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
@@ -13,87 +15,19 @@ import (
 	"github.com/go-openapi/swag"
 	graceful "github.com/tylerb/graceful"
 
+	"github.com/dominictracey/rugby-scores/dal"
 	"github.com/dominictracey/rugby-scores/models"
 	"github.com/dominictracey/rugby-scores/restapi/operations"
-	"github.com/dominictracey/rugby-scores/restapi/operations/pilots"
+	"github.com/dominictracey/rugby-scores/restapi/operations/pilot"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
 
-//go:generate swagger generate server --target .. --name hire-a-drone --spec ../openapi.yaml
-var items = make(map[int64]*models.Pilot)
-var lastID int64
-
-var itemsLock = &sync.Mutex{}
-
-func newItemID() int64 {
-	return atomic.AddInt64(&lastID, 1)
-}
-
-func addItem(item *models.Pilot) error {
-	if item == nil {
-		return errors.New(500, "item must be present")
-	}
-
-	itemsLock.Lock()
-	defer itemsLock.Unlock()
-
-	newID := newItemID()
-	item.ID = newID
-	items[newID] = item
-
-	return nil
-}
-
-func updateItem(id int64, item *models.Pilot) error {
-	if item == nil {
-		return errors.New(500, "item must be present")
-	}
-
-	itemsLock.Lock()
-	defer itemsLock.Unlock()
-
-	_, exists := items[id]
-	if !exists {
-		return errors.NotFound("not found: item %d", id)
-	}
-
-	item.ID = id
-	items[id] = item
-	return nil
-}
-
-func deleteItem(id int64) error {
-	itemsLock.Lock()
-	defer itemsLock.Unlock()
-
-	_, exists := items[id]
-	if !exists {
-		return errors.NotFound("not found: item %d", id)
-	}
-
-	delete(items, id)
-	return nil
-}
-
-func allItems(since int64, limit int32) (result []*models.Pilot) {
-	result = make([]*models.Pilot, 0)
-	for id, item := range items {
-		if len(result) >= int(limit) {
-			return
-		}
-		if since == 0 || id > since {
-			result = append(result, item)
-		}
-	}
-	return
-}
+//go:generate swagger generate server --target .. --name hire-a-drone --spec ../openApi.yaml --principal models.Principal
 
 func configureFlags(api *operations.HireADroneAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
 }
-
-//var lastID int64
 
 func configureAPI(api *operations.HireADroneAPI) http.Handler {
 	// configure the api here
@@ -103,63 +37,95 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 	// Expected interface func(string, ...interface{})
 	//
 	// Example:
-	// s.api.Logger = log.Printf
+	api.Logger = func(text string, args ...interface{}) {
+		ctx := context.Background()
+
+		// Sets your Google Cloud Platform project ID.
+		projectID := "rugby-scores-7"
+
+		// Creates a client.
+		client, err := logging.NewClient(ctx, projectID)
+		if err != nil {
+			log.Fatalf("Failed to create client: %v", err)
+		}
+
+		// Sets the name of the log to write to.
+		logName := "1.scores_api_endpoints_rugby_scores_7_cloud_goog.Pilot"
+
+		// Selects the log to write to.
+		logger := client.Logger(logName)
+
+		// Sets the data to log.
+		textL := fmt.Sprintf(text, args...)
+
+		// Adds an entry to the log buffer.
+		logger.Log(logging.Entry{Payload: textL, Severity: logging.Debug})
+
+		// Closes the client and flushes the buffer to the Stackdriver Logging
+		// service.
+		if err := client.Close(); err != nil {
+			log.Fatalf("Failed to close client: %v", err)
+		}
+
+		fmt.Printf("Logged: %v\n", textL)
+
+	}
+
+	api.Logger("Logger started for api")
 
 	api.JSONConsumer = runtime.JSONConsumer()
 
 	api.JSONProducer = runtime.JSONProducer()
 
-	api.GoogleIDTokenAuth = func(token string, scopes []string) (interface{}, error) {
-		return nil, errors.NotImplemented("oauth2 bearer auth (google_id_token) has not yet been implemented")
-	}
-
-	api.FirebaseAuth = func(token string, scopes []string) (interface{}, error) {
+	api.FirebaseAuth = func(token string, scopes []string) (*models.Principal, error) {
 		return nil, errors.NotImplemented("oauth2 bearer auth (firebase) has not yet been implemented")
 	}
 
-	api.GoogleJwtAuth = func(token string, scopes []string) (interface{}, error) {
-		return nil, errors.NotImplemented("oauth2 bearer auth (google_jwt) has not yet been implemented")
-	}
-
-	api.Auth0JwkAuth = func(token string, scopes []string) (interface{}, error) {
-		return nil, errors.NotImplemented("oauth2 bearer auth (auth0_jwk) has not yet been implemented")
-	}
-
 	// Applies when the "key" query is set
-	api.APIKeyAuth = func(token string) (interface{}, error) {
-		return nil, errors.NotImplemented("api key auth (api_key) key from query param [key] has not yet been implemented")
+	api.APIKeyAuth = func(token string) (*models.Principal, error) {
+		//api.Logger("Trying auth with key", token)
+		if token != "" {
+			prin := models.Principal(token)
+			// if api.Logger != nil {
+			// 	api.Logger("Trying auth with key %s", prin)
+			// }
+			return &prin, nil
+		}
+		api.Logger("Access attempt with incorrect api key auth: %s", token)
+		return nil, errors.New(401, "incorrect api key auth")
 	}
 
-	api.PilotsAddOneHandler = pilots.AddOneHandlerFunc(func(params pilots.AddOneParams) middleware.Responder {
-		if err := addItem(params.Body); err != nil {
-			return pilots.NewAddOneDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
-		}
-		return pilots.NewAddOneCreated().WithPayload(params.Body)
-	})
-	api.AuthInfoFirebaseHandler = operations.AuthInfoFirebaseHandlerFunc(func(params operations.AuthInfoFirebaseParams, principal interface{}) middleware.Responder {
+	api.Logger("Api key handler configured for api")
+
+	api.AuthInfoFirebaseHandler = operations.AuthInfoFirebaseHandlerFunc(func(params operations.AuthInfoFirebaseParams, principal *models.Principal) middleware.Responder {
 		return middleware.NotImplemented("operation .AuthInfoFirebase has not yet been implemented")
 	})
-	api.AuthInfoGoogleIDTokenHandler = operations.AuthInfoGoogleIDTokenHandlerFunc(func(params operations.AuthInfoGoogleIDTokenParams, principal interface{}) middleware.Responder {
-		return middleware.NotImplemented("operation .AuthInfoGoogleIDToken has not yet been implemented")
+	api.EchoHandler = operations.EchoHandlerFunc(func(params operations.EchoParams, principal *models.Principal) middleware.Responder {
+		api.Logger("Trying echo %s", *params.Message)
+
+		msg := string(params.Message.Message) + " dominic"
+		massage := &models.EchoMessage{Message: msg}
+
+		return operations.NewEchoOK().WithPayload(massage)
 	})
-	api.AuthInfoAuth0JwkHandler = operations.AuthInfoAuth0JwkHandlerFunc(func(params operations.AuthInfoAuth0JwkParams, principal interface{}) middleware.Responder {
-		return middleware.NotImplemented("operation .AuthInfoAuth0Jwk has not yet been implemented")
-	})
-	api.AuthInfoGoogleJwtHandler = operations.AuthInfoGoogleJwtHandlerFunc(func(params operations.AuthInfoGoogleJwtParams, principal interface{}) middleware.Responder {
-		return middleware.NotImplemented("operation .AuthInfoGoogleJwt has not yet been implemented")
-	})
-	api.PilotsDestroyOneHandler = pilots.DestroyOneHandlerFunc(func(params pilots.DestroyOneParams) middleware.Responder {
-		if err := deleteItem(params.ID); err != nil {
-			return pilots.NewDestroyOneDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
+	api.PilotAddOnePilotHandler = pilot.AddOnePilotHandlerFunc(func(params pilot.AddOnePilotParams, principal *models.Principal) middleware.Responder {
+		pf := dal.GetPilotDBFactoryInstance()
+		if err := pf.AddPilot(params.Body); err != nil {
+			return pilot.NewAddOnePilotDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
-		return pilots.NewDestroyOneNoContent()
+		api.Logger("Pilot added: %s %s %v %t", params.Body.FirstName, params.Body.LastName, params.Body.ID, params.Body.Licensed)
+		return pilot.NewAddOnePilotCreated().WithPayload(params.Body)
 	})
-	api.EchoHandler = operations.EchoHandlerFunc(func(params operations.EchoParams, principal interface{}) middleware.Responder {
-		return middleware.NotImplemented("operation .Echo has not yet been implemented")
+	api.PilotDestroyOnePilotHandler = pilot.DestroyOnePilotHandlerFunc(func(params pilot.DestroyOnePilotParams, principal *models.Principal) middleware.Responder {
+		pf := dal.GetPilotDBFactoryInstance()
+		if err := pf.DeletePilot(params.ID); err != nil {
+			return pilot.NewDestroyOnePilotDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
+		}
+		return pilot.NewDestroyOnePilotNoContent()
 	})
-	api.PilotsFindPilotsHandler = pilots.FindPilotsHandlerFunc(func(params pilots.FindPilotsParams) middleware.Responder {
-		log.Print("PilotsFindPilotsHandler")
-		mergedParams := pilots.NewFindPilotsParams()
+	api.PilotFindPilotsHandler = pilot.FindPilotsHandlerFunc(func(params pilot.FindPilotsParams, principal *models.Principal) middleware.Responder {
+		pf := dal.GetPilotDBFactoryInstance()
+		mergedParams := pilot.NewFindPilotsParams()
 		mergedParams.Since = swag.Int64(0)
 		if params.Since != nil {
 			mergedParams.Since = params.Since
@@ -167,13 +133,15 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 		if params.Limit != nil {
 			mergedParams.Limit = params.Limit
 		}
-		return pilots.NewFindPilotsOK().WithPayload(allItems(*mergedParams.Since, *mergedParams.Limit))
+
+		return pilot.NewFindPilotsOK().WithPayload(pf.AllPilots(*mergedParams.Since, *mergedParams.Limit))
 	})
-	api.PilotsUpdateOneHandler = pilots.UpdateOneHandlerFunc(func(params pilots.UpdateOneParams) middleware.Responder {
-		if err := updateItem(params.ID, params.Body); err != nil {
-			return pilots.NewUpdateOneDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
+	api.PilotUpdateOnePilotHandler = pilot.UpdateOnePilotHandlerFunc(func(params pilot.UpdateOnePilotParams, principal *models.Principal) middleware.Responder {
+		pf := dal.GetPilotDBFactoryInstance()
+		if err := pf.UpdatePilot(params.ID, params.Body); err != nil {
+			return pilot.NewUpdateOnePilotDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
-		return pilots.NewUpdateOneOK().WithPayload(params.Body)
+		return pilot.NewUpdateOnePilotOK().WithPayload(params.Body)
 	})
 
 	api.ServerShutdown = func() {}

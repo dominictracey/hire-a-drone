@@ -1,9 +1,9 @@
 # [START swagger]
 swagger: "2.0"
 info:
-  description: "Submit and view scores"
-  title: "Rugby Scores API"
-  version: "1.0.0"
+  description: "A simple Google Cloud Endpoints API example."
+  title: "Endpoints Example"
+  version: "1.1.0"
 host: "scores-api.endpoints.rugby-scores-7.cloud.goog"
 # [END swagger]
 basePath: "/"
@@ -12,10 +12,11 @@ consumes:
 produces:
 - "application/json"
 schemes:
-- http
-- https
+- "http"
+security:
+- api_key: []
 paths:
-  /echo:
+  "/echo":
     post:
       description: "Echo back a given message."
       operationId: "echo"
@@ -35,10 +36,10 @@ paths:
           $ref: "#/definitions/echoMessage"
       security:
       - api_key: []
-  /:
+  /pilot:
     get:
       tags:
-        - Pilots
+        - pilot
       operationId: findPilots
       parameters:
         - name: since
@@ -52,7 +53,7 @@ paths:
           default: 20
       responses:
         200:
-          description: list the Pilot operations
+          description: list the pilots
           schema:
             type: array
             items:
@@ -63,8 +64,8 @@ paths:
             $ref: "#/definitions/error"
     post:
       tags:
-        - Pilots
-      operationId: addOne
+        - pilot
+      operationId: addOnePilot
       parameters:
         - name: body
           in: body
@@ -79,7 +80,7 @@ paths:
           description: error
           schema:
             $ref: "#/definitions/error"
-  /{id}:
+  /pilot/{id}:
     parameters:
       - type: integer
         format: int64
@@ -88,8 +89,8 @@ paths:
         required: true
     put:
       tags:
-        - Pilots
-      operationId: updateOne
+        - pilot
+      operationId: updateOnePilot
       parameters:
         - name: body
           in: body
@@ -106,8 +107,8 @@ paths:
             $ref: "#/definitions/error"
     delete:
       tags:
-        - Pilots
-      operationId: destroyOne
+        - pilot
+      operationId: destroyOnePilot
       responses:
         204:
           description: Deleted
@@ -115,32 +116,6 @@ paths:
           description: error
           schema:
             $ref: "#/definitions/error"
-  "/auth/info/googlejwt":
-    get:
-      description: "Returns the requests' authentication information."
-      operationId: "auth_info_google_jwt"
-      produces:
-      - "application/json"
-      responses:
-        200:
-          description: "Authentication info."
-          schema:
-            $ref: "#/definitions/authInfoResponse"
-      security:
-      - google_jwt: []
-  "/auth/info/googleidtoken":
-    get:
-      description: "Returns the requests' authentication information."
-      operationId: "authInfoGoogleIdToken"
-      produces:
-      - "application/json"
-      responses:
-        200:
-          description: "Authentication info."
-          schema:
-            $ref: "#/definitions/authInfoResponse"
-      security:
-      - google_id_token: []
   "/auth/info/firebase":
     get:
       description: "Returns the requests' authentication information."
@@ -154,42 +129,34 @@ paths:
             $ref: "#/definitions/authInfoResponse"
       security:
       - firebase: []
-  "/auth/info/auth0":
-    get:
-      description: "Returns the requests' authentication information."
-      operationId: "auth_info_auth0_jwk"
-      produces:
-      - "application/json"
-      responses:
-        200:
-          description: "Authentication info."
-          schema:
-            $ref: "#/definitions/authInfoResponse"
-      security:
-      - auth0_jwk: []
 definitions:
+  pilot:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        readOnly: true
+      firstName:
+        type: string
+        minLength: 1
+      lastName:
+        type: string
+        minLength: 1
+      licensed:
+        type: boolean
   echoMessage:
     properties:
       message:
         type: "string"
-  pilot:
-    type: object
+  authInfoResponse:
     properties:
-      ID:
-        type: integer
-        format: int64
-        readOnly: true
-      Name:
-        type: string
-        minLength: 1
-      Phone:
-        type: string
-        minLength: 1
-      Address:
-        type: string
-        minLength: 1
-      Licensed:
-        type: boolean
+      id:
+        type: "string"
+      email:
+        type: "string"
+  principal:
+    type: string
   error:
     type: object
     required:
@@ -200,12 +167,6 @@ definitions:
         format: int64
       message:
         type: string
-  authInfoResponse:
-    properties:
-      id:
-        type: "string"
-      email:
-        type: "string"
 # This section requires all requests to any path to require an API key.
 securityDefinitions:
   # This section configures basic authentication with an API key.
@@ -213,45 +174,11 @@ securityDefinitions:
     type: "apiKey"
     name: "key"
     in: "query"
-  # This section configures authentication using Google API Service Accounts
-  # to sign a json web token. This is mostly used for server-to-server
-  # communication.
-  google_jwt:
-    authorizationUrl: "https://foo.bar/"
-    flow: "implicit"
-    type: "oauth2"
-    # This must match the 'iss' field in the JWT.
-    x-google-issuer: "jwt-client.endpoints.sample.google.com"
-    # Update this with your service account's email address.
-    x-google-jwks_uri: "https://www.googleapis.com/service_accounts/v1/jwk/YOUR-SERVICE-ACCOUNT-EMAIL"
-    # This must match the "aud" field in the JWT. You can add multiple audiences to accept JWTs from multiple clients.
-    x-google-audiences: "echo.endpoints.sample.google.com"
-  # This section configures authentication using Google OAuth2 ID Tokens.
-  # ID Tokens can be obtained using OAuth2 clients, and can be used to access
-  # your API on behalf of a particular user.
-  google_id_token:
-    authorizationUrl: "https://foo.bar/"
-    flow: "implicit"
-    type: "oauth2"
-    x-google-issuer: "https://accounts.google.com"
-    x-google-jwks_uri: "https://www.googleapis.com/oauth2/v3/certs"
-    x-google-audiences: "YOUR-CLIENT-ID"
   # This section configures authentication using Firebase Auth.
   firebase:
-    authorizationUrl: "https://foo.bar/"
+    authorizationUrl: "https://changemeplz.com"
     flow: "implicit"
     type: "oauth2"
-    x-google-issuer: "https://securetoken.google.com/YOUR-PROJECT-ID"
+    x-google-issuer: "https://securetoken.google.com/rugby-scores-7"
     x-google-jwks_uri: "https://www.googleapis.com/service_accounts/v1/metadata/x509/securetoken@system.gserviceaccount.com"
-    x-google-audiences: "YOUR-PROJECT-ID"
-      # This section configures authentication using Auth0 (https://auth0.com).
-  auth0_jwk:
-    # Update YOUR-ACCOUNT-NAME with your Auth0 account name.
-    authorizationUrl: "https://YOUR-ACCOUNT-NAME.auth0.com/authorize"
-    flow: "implicit"
-    type: "oauth2"
-    x-google-issuer: "https://YOUR-ACCOUNT-NAME.auth0.com/"
-    # Update this with your service account's email address.
-    x-google-jwks_uri: "https://YOUR-ACCOUNT-NAME.auth0.com/.well-known/jwks.json"
-    # Replace with your client ID, found in the Auth0 console.
-    x-google-audiences: "YOUR-CLIENT-ID"
+    x-google-audiences: "rugby-scores-7"
