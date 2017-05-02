@@ -59,7 +59,7 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 		textL := fmt.Sprintf(text, args...)
 
 		// Adds an entry to the log buffer.
-		logger.Log(logging.Entry{Payload: textL, Severity: logging.Critical})
+		logger.Log(logging.Entry{Payload: textL, Severity: logging.Debug})
 
 		// Closes the client and flushes the buffer to the Stackdriver Logging
 		// service.
