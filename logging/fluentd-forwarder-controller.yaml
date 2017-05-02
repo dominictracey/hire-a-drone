@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: fluentd-forwarder
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: fluentd-forwarder
+      labels:
+        app: fluentd-forwarder
+    spec:
+      containers:
+      - name: fluentd-forwarder
+        image: gcr.io/###your project id###/fluentd-forwarder:v1
+        env:
+        - name: FLUENTD_ARGS
+          value: -qq
+        ports:
+        - containerPort: 24224

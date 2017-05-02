@@ -24,9 +24,8 @@ type Pilot struct {
 	ID int64 `json:"id,omitempty"`
 
 	// last name
-	// Required: true
 	// Min Length: 1
-	LastName *string `json:"lastName"`
+	LastName string `json:"lastName,omitempty"`
 
 	// licensed
 	Licensed bool `json:"licensed,omitempty"`
@@ -67,11 +66,11 @@ func (m *Pilot) validateFirstName(formats strfmt.Registry) error {
 
 func (m *Pilot) validateLastName(formats strfmt.Registry) error {
 
-	if err := validate.Required("lastName", "body", m.LastName); err != nil {
-		return err
+	if swag.IsZero(m.LastName) { // not required
+		return nil
 	}
 
-	if err := validate.MinLength("lastName", "body", string(*m.LastName), 1); err != nil {
+	if err := validate.MinLength("lastName", "body", string(m.LastName), 1); err != nil {
 		return err
 	}
 

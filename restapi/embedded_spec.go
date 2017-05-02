@@ -247,9 +247,6 @@ func init() {
     },
     "pilot": {
       "type": "object",
-      "required": [
-        "lastName"
-      ],
       "properties": {
         "firstName": {
           "type": "string",

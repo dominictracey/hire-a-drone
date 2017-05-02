@@ -132,8 +132,6 @@ paths:
 definitions:
   pilot:
     type: object
-    required:
-      - lastName
     properties:
       id:
         type: integer

@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"sync"
-	"sync/atomic"
 
 	"cloud.google.com/go/logging"
 
@@ -17,6 +15,7 @@ import (
 	"github.com/go-openapi/swag"
 	graceful "github.com/tylerb/graceful"
 
+	"github.com/dominictracey/rugby-scores/dal"
 	"github.com/dominictracey/rugby-scores/models"
 	"github.com/dominictracey/rugby-scores/restapi/operations"
 	"github.com/dominictracey/rugby-scores/restapi/operations/pilot"
@@ -25,73 +24,6 @@ import (
 // This file is safe to edit. Once it exists it will not be overwritten
 
 //go:generate swagger generate server --target .. --name hire-a-drone --spec ../openApi.yaml --principal models.Principal
-var items = make(map[int64]*models.Pilot)
-var lastID int64
-
-var itemsLock = &sync.Mutex{}
-
-func newPilotID() int64 {
-	return atomic.AddInt64(&lastID, 1)
-}
-
-func addPilot(item *models.Pilot) error {
-	if item == nil {
-		return errors.New(500, "item must be present")
-	}
-
-	itemsLock.Lock()
-	defer itemsLock.Unlock()
-
-	newID := newPilotID()
-	item.ID = newID
-	items[newID] = item
-
-	return nil
-}
-
-func updatePilot(id int64, item *models.Pilot) error {
-	if item == nil {
-		return errors.New(500, "item must be present")
-	}
-
-	itemsLock.Lock()
-	defer itemsLock.Unlock()
-
-	_, exists := items[id]
-	if !exists {
-		return errors.NotFound("not found: item %d", id)
-	}
-
-	item.ID = id
-	items[id] = item
-	return nil
-}
-
-func deletePilot(id int64) error {
-	itemsLock.Lock()
-	defer itemsLock.Unlock()
-
-	_, exists := items[id]
-	if !exists {
-		return errors.NotFound("not found: item %d", id)
-	}
-
-	delete(items, id)
-	return nil
-}
-
-func allPilots(since int64, limit int32) (result []*models.Pilot) {
-	result = make([]*models.Pilot, 0)
-	for id, item := range items {
-		if len(result) >= int(limit) {
-			return
-		}
-		if since == 0 || id > since {
-			result = append(result, item)
-		}
-	}
-	return
-}
 
 func configureFlags(api *operations.HireADroneAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
@@ -154,9 +86,9 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 		//api.Logger("Trying auth with key", token)
 		if token != "" {
 			prin := models.Principal(token)
-			if api.Logger != nil {
-				api.Logger("Trying auth with key %s", prin)
-			}
+			// if api.Logger != nil {
+			// 	api.Logger("Trying auth with key %s", prin)
+			// }
 			return &prin, nil
 		}
 		api.Logger("Access attempt with incorrect api key auth: %s", token)
@@ -177,19 +109,22 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 		return operations.NewEchoOK().WithPayload(massage)
 	})
 	api.PilotAddOnePilotHandler = pilot.AddOnePilotHandlerFunc(func(params pilot.AddOnePilotParams, principal *models.Principal) middleware.Responder {
-		if err := addPilot(params.Body); err != nil {
+		pf := dal.GetPilotDBFactoryInstance()
+		if err := pf.AddPilot(params.Body); err != nil {
 			return pilot.NewAddOnePilotDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
-		api.Logger("Pilot added: %s %s %v %t", params.Body.FirstName, *params.Body.LastName, params.Body.ID, params.Body.Licensed)
+		api.Logger("Pilot added: %s %s %v %t", params.Body.FirstName, params.Body.LastName, params.Body.ID, params.Body.Licensed)
 		return pilot.NewAddOnePilotCreated().WithPayload(params.Body)
 	})
 	api.PilotDestroyOnePilotHandler = pilot.DestroyOnePilotHandlerFunc(func(params pilot.DestroyOnePilotParams, principal *models.Principal) middleware.Responder {
-		if err := deletePilot(params.ID); err != nil {
+		pf := dal.GetPilotDBFactoryInstance()
+		if err := pf.DeletePilot(params.ID); err != nil {
 			return pilot.NewDestroyOnePilotDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
 		return pilot.NewDestroyOnePilotNoContent()
 	})
 	api.PilotFindPilotsHandler = pilot.FindPilotsHandlerFunc(func(params pilot.FindPilotsParams, principal *models.Principal) middleware.Responder {
+		pf := dal.GetPilotDBFactoryInstance()
 		mergedParams := pilot.NewFindPilotsParams()
 		mergedParams.Since = swag.Int64(0)
 		if params.Since != nil {
@@ -199,10 +134,11 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 			mergedParams.Limit = params.Limit
 		}
 
-		return pilot.NewFindPilotsOK().WithPayload(allPilots(*mergedParams.Since, *mergedParams.Limit))
+		return pilot.NewFindPilotsOK().WithPayload(pf.AllPilots(*mergedParams.Since, *mergedParams.Limit))
 	})
 	api.PilotUpdateOnePilotHandler = pilot.UpdateOnePilotHandlerFunc(func(params pilot.UpdateOnePilotParams, principal *models.Principal) middleware.Responder {
-		if err := updatePilot(params.ID, params.Body); err != nil {
+		pf := dal.GetPilotDBFactoryInstance()
+		if err := pf.UpdatePilot(params.ID, params.Body); err != nil {
 			return pilot.NewUpdateOnePilotDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
 		}
 		return pilot.NewUpdateOnePilotOK().WithPayload(params.Body)
