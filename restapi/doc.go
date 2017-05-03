@@ -5,9 +5,9 @@ A simple Google Cloud Endpoints API example.
 
     Schemes:
       http
-    Host: scores-api.endpoints.rugby-scores-7.cloud.goog
+    Host: scores-api
     BasePath: /
-    Version: 1.0.0
+    Version: 1.1.0
 
     Consumes:
     - application/json
