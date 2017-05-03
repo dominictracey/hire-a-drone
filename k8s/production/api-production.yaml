@@ -31,8 +31,8 @@ spec:
         args: [
           "-p", "8081",
           "-a", "127.0.0.1:8080",
-          "-s", "scores-api",
-          "-v", "2017-05-02r0",
+          "-s", "echo-api.endpoints.rugby-scores-7.cloud.goog",
+          "-v", "2017-05-03r0",
         ]
       # [END esp]
         ports:
