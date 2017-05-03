@@ -25,9 +25,9 @@ func init() {
   "info": {
     "description": "A simple Google Cloud Endpoints API example.",
     "title": "Endpoints Example",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
-  "host": "scores-api.endpoints.rugby-scores-7.cloud.goog",
+  "host": "scores-api",
   "basePath": "/",
   "paths": {
     "/auth/info/firebase": {

@@ -3,12 +3,13 @@ package dal
 import (
 	"log"
 	"sync"
+	"sync/atomic"
 
 	"github.com/dominictracey/rugby-scores/models"
 	"github.com/go-openapi/errors"
 )
 
-// var itemsLock = &sync.Mutex{}
+var itemsLock = &sync.Mutex{}
 
 // PilotFactory manages lifecyle and persistence for Pilot model type
 type PilotFactory struct {
@@ -31,9 +32,9 @@ func GetPilotFactoryInstance() *PilotFactory {
 	return instance
 }
 
-// func (pf *PilotFactory) newPilotID() int64 {
-// 	return atomic.AddInt64(&pf.lastID, 1)
-// }
+func (pf *PilotFactory) newPilotID() int64 {
+	return atomic.AddInt64(&pf.lastID, 1)
+}
 
 // AddPilot inserts a new Pilot
 func (pf *PilotFactory) AddPilot(item *models.Pilot) error {

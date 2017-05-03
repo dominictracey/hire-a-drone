@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sync"
-	"sync/atomic"
 
 	"google.golang.org/api/iterator"
 
@@ -33,12 +31,6 @@ func GetPilotDBFactoryInstance() *PilotDBFactory {
 	return dbInstance
 }
 
-var itemsLock = &sync.Mutex{}
-
-func (pf *PilotFactory) newPilotID() int64 {
-	return atomic.AddInt64(&pf.lastID, 1)
-}
-
 // AddPilot inserts a new Pilot
 func (pf *PilotDBFactory) AddPilot(pilot *models.Pilot) error {
 	if pilot == nil {
@@ -59,14 +51,6 @@ func (pf *PilotDBFactory) AddPilot(pilot *models.Pilot) error {
 
 	// Sets the kind for the new entity.
 	kind := "Pilot"
-	// Sets the name/ID for the new entity.
-	// itemsLock.Lock()
-	// defer itemsLock.Unlock()
-
-	// newID := pf.newPilotID()
-	// pilot.ID = newID
-	// pf.lastID = newID
-	//name := "default"
 
 	// Creates a Key instance.
 	pilotKey := datastore.IncompleteKey(kind, nil)
