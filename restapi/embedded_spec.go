@@ -27,7 +27,7 @@ func init() {
     "title": "Endpoints Example",
     "version": "1.1.0"
   },
-  "host": "scores-api",
+  "host": "scores-api.endpoints.rugby-scores-7.cloud.goog",
   "basePath": "/",
   "paths": {
     "/auth/info/firebase": {
@@ -248,18 +248,24 @@ func init() {
     "pilot": {
       "type": "object",
       "properties": {
-        "firstName": {
+        "createdAt": {
           "type": "string",
-          "minLength": 1
+          "format": "date-time"
+        },
+        "firstName": {
+          "type": "string"
         },
         "id": {
           "type": "integer",
           "format": "int64",
           "readOnly": true
         },
-        "lastName": {
+        "lastModified": {
           "type": "string",
-          "minLength": 1
+          "format": "date-time"
+        },
+        "lastName": {
+          "type": "string"
         },
         "licensed": {
           "type": "boolean"

@@ -7,24 +7,26 @@ import (
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
-	"github.com/go-openapi/swag"
-	"github.com/go-openapi/validate"
 )
 
 // Pilot pilot
 // swagger:model pilot
 type Pilot struct {
 
+	// created at
+	CreatedAt strfmt.DateTime `json:"createdAt,omitempty"`
+
 	// first name
-	// Min Length: 1
 	FirstName string `json:"firstName,omitempty"`
 
 	// id
 	// Read Only: true
 	ID int64 `json:"id,omitempty"`
 
+	// last modified
+	LastModified strfmt.DateTime `json:"lastModified,omitempty"`
+
 	// last name
-	// Min Length: 1
 	LastName string `json:"lastName,omitempty"`
 
 	// licensed
@@ -35,44 +37,8 @@ type Pilot struct {
 func (m *Pilot) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateFirstName(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
-	if err := m.validateLastName(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *Pilot) validateFirstName(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.FirstName) { // not required
-		return nil
-	}
-
-	if err := validate.MinLength("firstName", "body", string(m.FirstName), 1); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *Pilot) validateLastName(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.LastName) { // not required
-		return nil
-	}
-
-	if err := validate.MinLength("lastName", "body", string(m.LastName), 1); err != nil {
-		return err
-	}
-
 	return nil
 }
