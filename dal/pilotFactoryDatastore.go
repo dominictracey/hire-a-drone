@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
+	"time"
 
 	"google.golang.org/api/iterator"
 
@@ -11,6 +13,7 @@ import (
 
 	"github.com/dominictracey/rugby-scores/models"
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 )
 
 // PilotDBFactory manages lifecyle and persistence for Pilot model type
@@ -19,10 +22,11 @@ type PilotDBFactory struct {
 }
 
 var dbInstance *PilotDBFactory
+var dbOnce sync.Once
 
-// GetPilotDBFactoryInstance for singleton
-func GetPilotDBFactoryInstance() *PilotDBFactory {
-	once.Do(func() {
+// GetPilotFactoryDatabaseInstance for singleton
+func GetPilotFactoryDatabaseInstance() *PilotDBFactory {
+	dbOnce.Do(func() {
 		dbInstance = &PilotDBFactory{}
 		//dbInstance.lastID = 7
 		log.Printf("Created PilotDBFactory instance %v", dbInstance)
@@ -49,6 +53,9 @@ func (pf *PilotDBFactory) AddPilot(pilot *models.Pilot) error {
 		return err
 	}
 
+	// timestamp for creation
+	pilot.CreatedAt = strfmt.DateTime(time.Now())
+
 	// Sets the kind for the new entity.
 	kind := "Pilot"
 
@@ -56,21 +63,19 @@ func (pf *PilotDBFactory) AddPilot(pilot *models.Pilot) error {
 	pilotKey := datastore.IncompleteKey(kind, nil)
 
 	// Saves the new entity.
-	pilotKey, err = client.Put(ctx, pilotKey, pilot)
-
-	if err != nil {
+	if pilotKey, err = client.Put(ctx, pilotKey, pilot); err != nil {
 		log.Fatalf("Failed to save pilot: %v", err)
 		return err
 	}
 
 	// save the ID
-	pilot.ID = pilotKey.ID
-	if _, err := client.Put(ctx, pilotKey, pilot); err != nil {
-		log.Fatalf("Failed to save pilot's new ID: %v", err)
-		return err
-	}
+	// pilot.ID = pilotKey.ID
+	// if _, err := client.Put(ctx, pilotKey, pilot); err != nil {
+	// 	log.Fatalf("Failed to save pilot's new ID: %v", err)
+	// 	return err
+	// }
 
-	fmt.Printf("Saved %v at %v\n", pilot.FirstName, pilotKey)
+	fmt.Printf("Saved %v at %v\n", pilot, pilotKey)
 
 	//try to get it back
 	var pilout models.Pilot
@@ -94,6 +99,7 @@ func (pf *PilotDBFactory) UpdatePilot(id int64, pilot *models.Pilot) error {
 	//pilot := &Pilot{} // Populated with appropriate data.
 	key := datastore.IncompleteKey("Pilot", nil)
 	key.ID = id
+	pilot.CreatedAt = strfmt.DateTime(time.Now())
 	// [START upsert]
 	key, err := client.Put(ctx, key, pilot)
 	if err != nil {

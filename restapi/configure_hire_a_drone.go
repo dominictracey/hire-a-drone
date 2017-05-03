@@ -12,13 +12,11 @@ import (
 	errors "github.com/go-openapi/errors"
 	runtime "github.com/go-openapi/runtime"
 	middleware "github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/swag"
 	graceful "github.com/tylerb/graceful"
 
 	"github.com/dominictracey/rugby-scores/dal"
 	"github.com/dominictracey/rugby-scores/models"
 	"github.com/dominictracey/rugby-scores/restapi/operations"
-	"github.com/dominictracey/rugby-scores/restapi/operations/pilot"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
@@ -108,41 +106,12 @@ func configureAPI(api *operations.HireADroneAPI) http.Handler {
 
 		return operations.NewEchoOK().WithPayload(massage)
 	})
-	api.PilotAddOnePilotHandler = pilot.AddOnePilotHandlerFunc(func(params pilot.AddOnePilotParams, principal *models.Principal) middleware.Responder {
-		pf := dal.GetPilotDBFactoryInstance()
-		if err := pf.AddPilot(params.Body); err != nil {
-			return pilot.NewAddOnePilotDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
-		}
-		api.Logger("Pilot added: %s %s %v %t", params.Body.FirstName, params.Body.LastName, params.Body.ID, params.Body.Licensed)
-		return pilot.NewAddOnePilotCreated().WithPayload(params.Body)
-	})
-	api.PilotDestroyOnePilotHandler = pilot.DestroyOnePilotHandlerFunc(func(params pilot.DestroyOnePilotParams, principal *models.Principal) middleware.Responder {
-		pf := dal.GetPilotDBFactoryInstance()
-		if err := pf.DeletePilot(params.ID); err != nil {
-			return pilot.NewDestroyOnePilotDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
-		}
-		return pilot.NewDestroyOnePilotNoContent()
-	})
-	api.PilotFindPilotsHandler = pilot.FindPilotsHandlerFunc(func(params pilot.FindPilotsParams, principal *models.Principal) middleware.Responder {
-		pf := dal.GetPilotDBFactoryInstance()
-		mergedParams := pilot.NewFindPilotsParams()
-		mergedParams.Since = swag.Int64(0)
-		if params.Since != nil {
-			mergedParams.Since = params.Since
-		}
-		if params.Limit != nil {
-			mergedParams.Limit = params.Limit
-		}
 
-		return pilot.NewFindPilotsOK().WithPayload(pf.AllPilots(*mergedParams.Since, *mergedParams.Limit))
-	})
-	api.PilotUpdateOnePilotHandler = pilot.UpdateOnePilotHandlerFunc(func(params pilot.UpdateOnePilotParams, principal *models.Principal) middleware.Responder {
-		pf := dal.GetPilotDBFactoryInstance()
-		if err := pf.UpdatePilot(params.ID, params.Body); err != nil {
-			return pilot.NewUpdateOnePilotDefault(500).WithPayload(&models.Error{Code: 500, Message: swag.String(err.Error())})
-		}
-		return pilot.NewUpdateOnePilotOK().WithPayload(params.Body)
-	})
+	hf := dal.GetHandlerFactoryInstance()
+	api.PilotAddOnePilotHandler = hf.GetAddOnePilotHandler(false)
+	api.PilotDestroyOnePilotHandler = hf.GetDestroyOnePilotNoContentCodeHandler(false)
+	api.PilotFindPilotsHandler = hf.GetFindPilotsHandler(false)
+	api.PilotUpdateOnePilotHandler = hf.GetUpdateOnePilotHandler(false)
 
 	api.ServerShutdown = func() {}
 

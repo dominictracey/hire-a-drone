@@ -139,12 +139,16 @@ definitions:
         readOnly: true
       firstName:
         type: string
-        minLength: 1
       lastName:
         type: string
-        minLength: 1
       licensed:
         type: boolean
+      createdAt:
+        type: string
+        format: date-time
+      lastModified:
+        type: string
+        format: date-time
   echoMessage:
     properties:
       message:
