@@ -33,7 +33,6 @@ func GetPilotFactoryInMemInstance() *InMemPilotFactory {
 
 		log.Printf("Created InMemPilotFactory instance %v", inMemInstance)
 	})
-
 	return inMemInstance
 }
 
